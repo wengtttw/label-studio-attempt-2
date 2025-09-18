@@ -14,6 +14,7 @@ from django.shortcuts import redirect, render, reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from organizations.forms import OrganizationSignupForm
 from organizations.models import Organization
+from organizations.models import OrganizationMember
 from rest_framework.authtoken.models import Token
 from users import forms
 from users.functions import login, proceed_registration
@@ -184,3 +185,16 @@ def user_account(request, sub_path=None):
         'users/user_account.html',
         {'settings': settings, 'user': user, 'user_profile_form': form, 'token': token},
     )
+
+@login_required
+def inactive_page(request):
+    # Get the user's active organization membership
+    try:
+        org_member = OrganizationMember.objects.get(user=request.user, deleted_at__isnull=True)
+    except OrganizationMember.DoesNotExist:
+        return redirect('logout')  # Or another fallback
+
+    if org_member.role != 'inactive':
+        return redirect('/')  # Or dashboard
+
+    return render(request, 'users/user_inactive.html')

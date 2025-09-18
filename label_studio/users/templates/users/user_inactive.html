@@ -1,0 +1,20 @@
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ settings.HOSTNAME }}{% static 'css/users.css' %}">
+{% endblock %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inactive Account</title>
+</head>
+<body>
+    <h1>Your account is inactive</h1>
+    <p>Please wait for an admin to activate your account.</p>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
+</body>
+</html>

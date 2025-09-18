@@ -157,7 +157,6 @@ DATABASES_ALL = {
         #'NAME': get_env('POSTGRE_NAME', 'labelstudio2'),
         'NAME': 'labelstudio2',
         'HOST': get_env('POSTGRE_HOST', 'localhost'),
-        'PORT': int(get_env('POSTGRE_PORT', '5432')),
     },
     DJANGO_DB_MYSQL: {
         'ENGINE': 'django.db.backends.mysql',

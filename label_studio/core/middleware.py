@@ -19,6 +19,12 @@ from django.utils.deprecation import MiddlewareMixin
 from django.utils.http import escape_leading_slashes
 from rest_framework.permissions import SAFE_METHODS
 
+from django.shortcuts import redirect
+from django.urls import reverse
+from organizations.models import Organization
+from organizations.models import OrganizationMember
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -263,3 +269,23 @@ class HumanSignalCspMiddleware(CSPMiddleware):
                 del response['Content-Security-Policy-Report-Only']
             delattr(response, '_override_report_only_csp')
         return response
+
+class InactiveUserRedirectMiddleware(MiddlewareMixin):
+    """
+    Redirect users with the 'inactive' role to the inactive page.
+    """
+    def process_request(self, request):
+        # Only check for authenticated users
+        if (
+            hasattr(request, 'user')
+            and request.user.is_authenticated
+            and not request.path.startswith(reverse('user_inactive'))
+            and not request.path.startswith(reverse('logout'))
+            and not request.path.startswith('/admin')  # Allow admin access
+        ):
+            try:
+                org_member = OrganizationMember.objects.get(user=request.user, deleted_at__isnull=True)
+                if org_member.role == 'inactive':
+                    return redirect('user_inactive')
+            except Organization.DoesNotExist:
+                pass
