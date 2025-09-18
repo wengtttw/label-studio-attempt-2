@@ -244,7 +244,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'core.middleware.XApiKeySupportMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'core.middleware.InactiveUserRedirectMiddleware',  # Use full path if needed
+    'core.middleware.InactiveUserRedirectMiddleware',  # Redirect inactive users to inactive page
     'django.contrib.messages.middleware.MessageMiddleware',
     'core.middleware.CommonMiddlewareAppendSlashWithoutRedirect',  # instead of 'CommonMiddleware'
     'django_user_agents.middleware.UserAgentMiddleware',

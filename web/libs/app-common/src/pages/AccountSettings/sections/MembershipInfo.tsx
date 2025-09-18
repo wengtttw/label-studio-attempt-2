@@ -38,26 +38,29 @@ export const MembershipInfo = () => {
       let role = "Owner";
 
       switch (response.role) {
-        case "OW":
+        case "owner":
           role = "Owner";
           break;
         case "DI":
           role = "Deactivated";
           break;
-        case "AD":
+        case "admin":
           role = "Administrator";
           break;
         case "MA":
           role = "Manager";
           break;
-        case "AN":
+        case "annotator":
           role = "Annotator";
           break;
-        case "RE":
+        case "reviewer":
           role = "Reviewer";
           break;
         case "NO":
           role = "Pending";
+          break;
+        case "inactive":
+          role = "Inactive";
           break;
       }
 
