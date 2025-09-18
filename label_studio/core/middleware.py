@@ -287,5 +287,5 @@ class InactiveUserRedirectMiddleware(MiddlewareMixin):
                 org_member = OrganizationMember.objects.get(user=request.user, deleted_at__isnull=True)
                 if org_member.role == 'inactive':
                     return redirect('user_inactive')
-            except Organization.DoesNotExist:
+            except OrganizationMember.DoesNotExist:
                 pass
