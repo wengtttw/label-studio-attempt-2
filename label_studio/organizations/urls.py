@@ -37,4 +37,5 @@ urlpatterns = [
     # invite
     path('api/invite', api.OrganizationInviteAPI.as_view(), name='organization-invite'),
     path('api/invite/reset-token', api.OrganizationResetTokenAPI.as_view(), name='organization-reset-token'),
+    path('api/organizations/update-user-role/', api.UpdateUserRoleAPI.as_view(), name='update-user-role'),
 ]

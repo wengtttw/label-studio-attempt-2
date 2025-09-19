@@ -32,6 +32,11 @@ from rest_framework.views import APIView
 from tasks.models import Annotation
 from users.models import User
 
+from rest_framework import status, permissions
+from .models import OrganizationMember
+from .serializers import OrganizationMemberSerializer
+
+
 from label_studio.core.permissions import ViewClassPermission, all_permissions
 from label_studio.core.utils.params import bool_from_request
 
@@ -395,3 +400,34 @@ class OrganizationResetTokenAPI(APIView):
         serializer = OrganizationInviteSerializer(data={'invite_url': invite_url, 'token': org.token})
         serializer.is_valid()
         return Response(serializer.data, status=201)
+
+class UpdateUserRoleAPI(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        org_id = request.data.get('pk')
+        user_id = request.data.get('userPk')
+        new_role = request.data.get('role')
+
+        # Get the requesting user's org member record
+        try:
+            requester = OrganizationMember.objects.get(
+                organization_id=org_id, user=request.user
+            )
+        except OrganizationMember.DoesNotExist:
+            return Response({'detail': 'Not a member of this organization.'}, status=403)
+
+        if requester.role not in ['owner', 'admin']:
+            return Response({'detail': 'Permission denied.'}, status=403)
+
+        # Get the target user's org member record
+        try:
+            member = OrganizationMember.objects.get(
+                organization_id=org_id, user_id=user_id
+            )
+        except OrganizationMember.DoesNotExist:
+            return Response({'detail': 'User not found in organization.'}, status=404)
+
+        member.role = new_role
+        member.save()
+        return Response({'success': True, 'role': member.role}, status=200)
