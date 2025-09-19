@@ -58,7 +58,7 @@ export const SelectedUser = ({ user, onClose }) => {
   });
 
   //Fetch organization member info for this user
-  const { data: orgMember, error, isLoading } = useQuery({
+  const { data: orgMember, error, isLoading, refetch: refetchOrgMember } = useQuery({
     queryKey: [user?.active_organization, user?.id, "user-membership"],
     queryFn: async () => {
       if (!user?.active_organization  || !user.id) return null;
@@ -76,9 +76,16 @@ export const SelectedUser = ({ user, onClose }) => {
 
   // Only allow owner or admin to change roles
   const canChangeRole = currentMembership?.role === "owner" || currentMembership?.role === "admin";
+  const isSelectedUserOwner = orgMember?.role?.toLowerCase() === "owner";
+  const isSelectedCurrentUser = currentUser?.id === user?.id;
   const [selectedRole, setSelectedRole] = useState(orgMember?.role);
   const [pendingRole, setPendingRole] = useState(orgMember?.role);
   const [roleChangeStatus, setRoleChangeStatus] = useState(null);
+
+  console.log("isSelectedUserOwner:", isSelectedUserOwner);
+  console.log("isSelectedCurrentUser:", isSelectedCurrentUser);
+  console.log("currentUser id:", currentUser?.id);
+  console.log("user id:", user?.id);
 
   useEffect(() => {
     setSelectedRole(orgMember?.role);
@@ -108,6 +115,7 @@ const handleRoleUpdate = async () => {
     if (!response.ok) throw new Error("Failed to update role");
     setRoleChangeStatus({ success: true, message: "Role updated successfully!" });
     setSelectedRole(pendingRole);
+    await refetchOrgMember(); // Refetch the latest role from the backend
   } catch (err) {
     setRoleChangeStatus({ success: false, message: "Failed to update role." });
   }
@@ -137,7 +145,7 @@ const handleRoleUpdate = async () => {
             </Elem>
           )}
           {/* Only show dropdown if current user is owner or admin */}
-          {canChangeRole && (
+          {(canChangeRole && !isSelectedUserOwner && !isSelectedCurrentUser) && (
             <Elem name="section">
               <Elem name="section-title">Change Role</Elem>
               <select value={pendingRole} onChange={handleDropdownChange}>
