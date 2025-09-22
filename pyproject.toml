@@ -76,6 +76,7 @@ dependencies = [
     ## HumanSignal repo dependencies :start
     "label-studio-sdk @ https://github.com/HumanSignal/label-studio-sdk/archive/77b0c0abd2847c914096e6054b6f1b1805ee1b7a.zip",
     ## HumanSignal repo dependencies :end
+    "drf-nested-routers (>=0.95.0,<0.96.0)"
 ]
 
 [project.urls]

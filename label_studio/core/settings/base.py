@@ -220,7 +220,7 @@ INSTALLED_APPS = [
     'users',
     'organizations',
     'data_import',
-    'data_export',
+    'label_studio.data_export',
     'projects',
     'tasks',
     'data_manager',

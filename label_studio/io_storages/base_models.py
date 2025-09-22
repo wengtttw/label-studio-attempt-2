@@ -21,7 +21,7 @@ from core.feature_flags import flag_set
 from core.redis import is_job_in_queue, is_job_on_worker, redis_connected
 from core.utils.common import load_func
 from core.utils.iterators import iterate_queryset
-from data_export.serializers import ExportDataSerializer
+from label_studio.data_export.serializers import ExportDataSerializer
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.db import models, transaction

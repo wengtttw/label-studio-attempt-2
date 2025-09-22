@@ -70,8 +70,9 @@ export const SelectedUser = ({ user, onClose }) => {
     enabled: !!user?.active_organization && !!user?.id,
   });
 
-  console.log("Current membership role:", currentMembership?.role);
-  console.log("orgMember data:", orgMember); // Debug orgMember data
+  //Debugging logs
+  /* console.log("Current membership role:", currentMembership?.role);
+  console.log("orgMember data:", orgMember); */
   if (error) console.error("Error fetching orgMember:", error);
 
   // Only allow owner or admin to change roles
@@ -82,10 +83,11 @@ export const SelectedUser = ({ user, onClose }) => {
   const [pendingRole, setPendingRole] = useState(orgMember?.role);
   const [roleChangeStatus, setRoleChangeStatus] = useState(null);
 
-  console.log("isSelectedUserOwner:", isSelectedUserOwner);
+  //Debugging logs
+  /* console.log("isSelectedUserOwner:", isSelectedUserOwner);
   console.log("isSelectedCurrentUser:", isSelectedCurrentUser);
   console.log("currentUser id:", currentUser?.id);
-  console.log("user id:", user?.id);
+  console.log("user id:", user?.id); */
 
   useEffect(() => {
     setSelectedRole(orgMember?.role);

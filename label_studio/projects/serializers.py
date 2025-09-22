@@ -34,15 +34,30 @@ from rest_framework.serializers import SerializerMethodField
 from tasks.models import Task
 from users.serializers import UserSimpleSerializer
 
+from projects.models import ProjectMember
 
 class CreatedByFromContext:
     requires_context = True
 
     def __call__(self, serializer_field):
         return serializer_field.context.get('created_by')
+    
+
+
+class ProjectMemberSerializer(serializers.ModelSerializer):
+    user = UserSimpleSerializer(read_only=True)
+
+    class Meta:
+        model = ProjectMember
+        fields = ['id', 'user', 'enabled', 'created_at', 'updated_at']
 
 
 class ProjectSerializer(FlexFieldsModelSerializer):
+    members = serializers.SerializerMethodField(read_only=True)
+
+    def get_members(self, obj):
+        members = obj.members.select_related('user').all()
+        return ProjectMemberSerializer(members, many=True).data
     """Serializer get numbers from project queryset annotation,
     make sure, that you use correct one(Project.objects.with_counts())
     """
@@ -205,6 +220,7 @@ class ProjectSerializer(FlexFieldsModelSerializer):
             'created_by': {'required': False},
         }
         fields = [
+            'members',
             'id',
             'title',
             'description',

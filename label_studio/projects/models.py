@@ -408,6 +408,22 @@ class Project(ProjectMixin, models.Model):
     def has_collaborator_enabled(self, user):
         membership = ProjectMember.objects.filter(user=user, project=self)
         return membership.exists() and membership.first().enabled
+    
+    def remove_member(self, user):
+        """Remove a user from the project members."""
+        from users.models import User
+        ProjectMember.objects.filter(user=user, project=self).delete()
+
+    @property
+    def members_list(self):
+        """Return a queryset of all users who are members of this project."""
+        from users.models import User
+        member_ids = self.members.values_list('user__id', flat=True)
+        return User.objects.filter(id__in=member_ids)
+
+    def is_member(self, user):
+        """Check if a user is a member of this project."""
+        return self.members.filter(user=user).exists()
 
     def _update_tasks_states(
         self, maximum_annotations_changed, overlap_cohort_percentage_changed, tasks_number_changed

@@ -4,8 +4,13 @@ from django.urls import include, path
 
 from . import api, views
 
+from .api import ProjectMemberViewSet
+
 app_name = 'projects'
 
+from .api import ProjectMemberViewSet
+
+app_name = 'projects'
 # reverse for projects:name
 _urlpatterns = [
     path('', views.project_list, name='project-index'),
@@ -55,5 +60,11 @@ _api_urlpatterns_templates = [
 urlpatterns = [
     path('projects/', include(_urlpatterns)),
     path('api/projects/', include((_api_urlpatterns, app_name), namespace='api')),
+    path('api/projects/<int:project_pk>/members/',
+         ProjectMemberViewSet.as_view({'get': 'list', 'post': 'create'}),
+         name='project-members-list'),
+    path('api/projects/<int:project_pk>/members/<int:pk>/',
+         ProjectMemberViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update', 'delete': 'destroy'}),
+         name='project-members-detail'),
     path('api/templates/', include((_api_urlpatterns_templates, app_name), namespace='api-templates')),
 ]

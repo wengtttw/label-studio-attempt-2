@@ -1,7 +1,7 @@
 from unittest.mock import ANY, patch
 
-from data_export.api import async_convert
-from data_export.models import ConvertedFormat, Export
+from label_studio.data_export.api import async_convert
+from label_studio.data_export.models import ConvertedFormat, Export
 from projects.tests.factories import ProjectFactory
 from rest_framework.test import APITestCase
 

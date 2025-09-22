@@ -4,4 +4,5 @@ from django.apps import AppConfig
 
 
 class DataExportConfig(AppConfig):
-    name = 'data_export'
+    name = 'label_studio.data_export'
+    label = 'data_export'

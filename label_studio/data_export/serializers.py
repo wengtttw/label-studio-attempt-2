@@ -2,7 +2,7 @@
 """
 from core.label_config import replace_task_data_undefined_with_config_field
 from core.utils.common import load_func
-from data_export.models import DataExport
+from label_studio.data_export.models import DataExport  # Ensure this is the correct absolute import
 from django.conf import settings
 from label_studio_sdk._extensions.label_studio_tools.core.label_config import is_video_object_tracking
 from label_studio_sdk._extensions.label_studio_tools.postprocessing.video import extract_key_frames
@@ -14,7 +14,7 @@ from tasks.serializers import AnnotationDraftSerializer, PredictionSerializer
 from users.models import User
 from users.serializers import UserSimpleSerializer
 
-from .models import ConvertedFormat, Export
+from label_studio.data_export.models import ConvertedFormat, Export
 
 
 class CompletedBySerializer(serializers.ModelSerializer):

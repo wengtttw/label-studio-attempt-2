@@ -15,7 +15,7 @@ import requests_mock
 import ujson as json
 from box import Box
 from core.feature_flags import flag_set
-from data_export.models import ConvertedFormat, Export
+from label_studio.data_export.models import ConvertedFormat, Export
 from django.apps import apps
 from django.conf import settings
 from django.test import Client

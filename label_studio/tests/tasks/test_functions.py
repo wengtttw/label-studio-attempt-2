@@ -3,7 +3,7 @@ import os
 
 import psutil
 import pytest
-from data_export.serializers import ExportDataSerializer
+from label_studio.data_export.serializers import ExportDataSerializer
 from django.conf import settings
 from tasks.functions import export_project
 

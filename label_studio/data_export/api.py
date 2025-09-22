@@ -26,7 +26,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from tasks.models import Task
 
-from .models import ConvertedFormat, DataExport, Export
+from label_studio.data_export.models import ConvertedFormat, DataExport, Export
 from .serializers import (
     ExportConvertSerializer,
     ExportCreateSerializer,
@@ -607,7 +607,7 @@ def async_convert(converted_format_id, export_type, project, hostname, download_
 
 
 def set_convert_background_failure(job, connection, type, value, traceback_obj):
-    from data_export.models import ConvertedFormat
+    from label_studio.data_export.models import ConvertedFormat
 
     convert_id = job.args[0]
     try:

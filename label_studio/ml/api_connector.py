@@ -8,7 +8,7 @@ import requests
 from core.feature_flags import flag_set
 from core.utils.common import load_func
 from core.version import get_git_version
-from data_export.serializers import ExportDataSerializer
+from label_studio.data_export.serializers import ExportDataSerializer
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Count

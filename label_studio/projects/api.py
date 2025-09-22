@@ -1,3 +1,4 @@
+from rest_framework.exceptions import PermissionDenied
 """This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
 """
 import logging
@@ -22,6 +23,7 @@ from django_filters import CharFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema
+from django.db import models
 from label_studio_sdk.label_interface.interface import LabelInterface
 from ml.serializers import MLBackendSerializer
 from projects.functions.next_task import get_next_task
@@ -58,6 +60,12 @@ from webhooks.models import WebhookAction
 from webhooks.utils import api_webhook, api_webhook_for_delete, emit_webhooks_for_instance
 
 from label_studio.core.utils.common import load_func
+
+from rest_framework import viewsets, permissions, status
+from rest_framework.response import Response
+from projects.models import ProjectMember, Project
+from projects.serializers import ProjectMemberSerializer
+from django.shortcuts import get_object_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -175,6 +183,19 @@ class ProjectFilterSet(FilterSet):
     title = CharFilter(field_name='title', lookup_expr='icontains')
 
 
+
+# Custom permission for project access
+class IsProjectOwnerOrMember(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        # Allow if owner/creator
+        if hasattr(user, 'role') and user.role == 'owner':
+            return True
+        if obj.created_by == user:
+            return True
+        # Allow if member
+        return obj.members.filter(user=user).exists()
+
 @method_decorator(
     name='get',
     decorator=extend_schema(
@@ -228,6 +249,8 @@ class ProjectFilterSet(FilterSet):
         },
     ),
 )
+
+    
 class ProjectListAPI(generics.ListCreateAPIView):
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     serializer_class = ProjectSerializer
@@ -239,7 +262,7 @@ class ProjectListAPI(generics.ListCreateAPIView):
     )
     pagination_class = ProjectListPagination
 
-    def get_queryset(self):
+    """ def get_queryset(self):
         serializer = GetFieldsSerializer(data=self.request.query_params)
         serializer.is_valid(raise_exception=True)
         fields = serializer.validated_data.get('include')
@@ -249,7 +272,17 @@ class ProjectListAPI(generics.ListCreateAPIView):
         )
         if filter in ['pinned_only', 'exclude_pinned']:
             projects = projects.filter(pinned_at__isnull=filter == 'exclude_pinned')
-        return ProjectManager.with_counts_annotate(projects, fields=fields).prefetch_related('members', 'created_by')
+        return ProjectManager.with_counts_annotate(projects, fields=fields).prefetch_related('members', 'created_by') """
+    
+    def get_queryset(self):
+        user = self.request.user
+        # Allow all for owner role
+        if hasattr(user, 'role') and user.role == 'owner':
+            return Project.objects.all()
+        # Only show projects where user is creator or member
+        return Project.objects.filter(
+            models.Q(created_by=user) | models.Q(members__user=user)
+        ).distinct()
 
     def get_serializer_context(self):
         context = super(ProjectListAPI, self).get_serializer_context()
@@ -407,6 +440,20 @@ class ProjectCountsListAPI(generics.ListAPIView):
     ),
 )
 class ProjectAPI(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsProjectOwnerOrMember]
+
+    def get_object(self):
+        obj = super().get_object()
+        user = self.request.user
+        # Allow if owner/creator
+        if hasattr(user, 'role') and user.role == 'owner':
+            return obj
+        if obj.created_by == user:
+            return obj
+        # Allow if member
+        if obj.members.filter(user=user).exists():
+            return obj
+        raise PermissionDenied("You do not have access to this project.")
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     queryset = Project.objects.with_counts()
     permission_required = ViewClassPermission(
@@ -914,3 +961,43 @@ class ProjectModelVersions(generics.RetrieveAPIView):
         count = project.delete_predictions(model_version=model_version)
 
         return Response(data=count)
+    
+    # Custom permission: Only project admin/owner can update enabled status
+class IsProjectAdminOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return True  # Allow all for list/create, restrict in object-level
+
+    def has_object_permission(self, request, view, obj):
+        # Only allow update/delete if user is project owner or staff
+        return request.user.is_staff or (hasattr(obj.project, 'created_by') and obj.project.created_by == request.user)
+
+
+class ProjectMemberViewSet(viewsets.ModelViewSet):
+    serializer_class = ProjectMemberSerializer
+    permission_classes = [IsProjectAdminOrReadOnly]
+
+    def get_queryset(self):
+        project_id = self.kwargs.get('project_pk') or self.request.query_params.get('project')
+        if not project_id:
+            return ProjectMember.objects.none()
+        return ProjectMember.objects.filter(project_id=project_id)
+
+    def perform_create(self, serializer):
+        project_id = self.kwargs.get('project_pk') or self.request.data.get('project')
+        user = self.request.data.get('user')
+        project = get_object_or_404(Project, pk=project_id)
+        serializer.save(project=project, enabled=False)
+
+    def update(self, request, *args, **kwargs):
+        # Only admin/owner can update enabled status
+        instance = self.get_object()
+        if not self.check_object_permissions(request, instance):
+            return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        # Only admin/owner can update enabled status
+        instance = self.get_object()
+        if not self.check_object_permissions(request, instance):
+            return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().partial_update(request, *args, **kwargs)

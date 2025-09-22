@@ -367,7 +367,7 @@ class ExportMixin:
 def export_background(
     export_id, task_filter_options, annotation_filter_options, serialization_options, *args, **kwargs
 ):
-    from data_export.models import Export
+    from label_studio.data_export.models import Export
 
     Export.objects.get(id=export_id).export_to_file(
         task_filter_options,
@@ -377,7 +377,7 @@ def export_background(
 
 
 def set_export_background_failure(job, connection, type, value, traceback):
-    from data_export.models import Export
+    from label_studio.data_export.models import Export
 
     export_id = job.args[0]
     Export.objects.filter(id=export_id).update(status=Export.Status.FAILED)

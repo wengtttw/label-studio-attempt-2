@@ -8,9 +8,9 @@ from core.models import AsyncMigrationStatus
 from core.redis import start_job_async_or_sync
 from core.utils.common import batch, batched_iterator
 from core.utils.iterators import iterate_queryset
-from data_export.mixins import ExportMixin
-from data_export.models import DataExport
-from data_export.serializers import ExportDataSerializer
+from label_studio.data_export.mixins import ExportMixin
+from label_studio.data_export.models import DataExport
+from label_studio.data_export.serializers import ExportDataSerializer
 from data_manager.managers import TaskQuerySet
 from django.conf import settings
 from django.db.models import Count, F, Q

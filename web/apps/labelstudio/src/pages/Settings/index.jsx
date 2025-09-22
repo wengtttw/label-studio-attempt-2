@@ -4,6 +4,7 @@ import { DangerZone } from "./DangerZone";
 import { GeneralSettings } from "./GeneralSettings";
 import { AnnotationSettings } from "./AnnotationSettings";
 import { LabelingSettings } from "./LabelingSettings";
+import { MembershipSettings } from "./Membership";
 import { MachineLearningSettings } from "./MachineLearningSettings/MachineLearningSettings";
 import { PredictionsSettings } from "./PredictionsSettings/PredictionsSettings";
 import { StorageSettings } from "./StorageSettings/StorageSettings";
@@ -18,6 +19,7 @@ export const MenuLayout = ({ children, ...routeProps }) => {
       menuItems={[
         GeneralSettings,
         LabelingSettings,
+        MembershipSettings,
         AnnotationSettings,
         MachineLearningSettings,
         PredictionsSettings,
@@ -31,9 +33,11 @@ export const MenuLayout = ({ children, ...routeProps }) => {
   );
 };
 
+
 const pages = {
   AnnotationSettings,
   LabelingSettings,
+  MembershipSettings,
   MachineLearningSettings,
   PredictionsSettings,
   WebhookPage,
