@@ -83,7 +83,7 @@ export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) 
         <div className="user-info__email">Email: {user.email}</div>
         <div>Name: {user.first_name} {user.last_name}</div>
         <div>Status: {isMember ? (memberInfo.enabled ? "Enabled" : "Disabled") : "Not in project"}</div>
-        <div>Role: {isMember ? user.role : "-"}</div>
+        <div>Org Role: {(memberInfo && memberInfo.org_role) || user.org_role || 'N/A'}</div>
         {error && <Elem name="error">{error}</Elem>}
         {loading && <Elem name="loading">Processing...</Elem>}
         <div style={{ marginTop: 16 }}>

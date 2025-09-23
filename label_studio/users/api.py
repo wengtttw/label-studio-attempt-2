@@ -203,6 +203,8 @@ class UserAPI(viewsets.ModelViewSet):
     def get_serializer_context(self):
         context = super(UserAPI, self).get_serializer_context()
         context['user'] = self.request.user
+        # Pass the active organization for org_role resolution in serializers
+        context['organization'] = getattr(self.request.user, 'active_organization', None)
         return context
 
     def update(self, request, *args, **kwargs):

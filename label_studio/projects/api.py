@@ -1028,6 +1028,17 @@ class ProjectMemberViewSet(viewsets.ModelViewSet):
         from django.contrib.auth import get_user_model
         User = get_user_model()
         user = get_object_or_404(User, pk=user_id)
+        acting_user = self.request.user
+        is_project_member = ProjectMember.objects.filter(project=project, user=acting_user, enabled=True).exists()
+        try:
+            org_member = OrganizationMember.objects.get(user=acting_user, organization=project.organization, deleted_at__isnull=True)
+            is_org_admin = org_member.role in ['owner', 'admin']
+        except OrganizationMember.DoesNotExist:
+            is_org_admin = False
+        if not (is_project_member and is_org_admin):
+            print("DEBUG: perform_create permission denied for user", acting_user)
+            raise PermissionDenied('Only enabled project collaborators with owner/admin org role can add members.')
+
         serializer.save(project=project, user=user, enabled=False)
 
     def update(self, request, *args, **kwargs):

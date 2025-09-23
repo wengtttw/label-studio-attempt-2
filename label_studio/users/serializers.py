@@ -5,6 +5,8 @@ from django.conf import settings
 from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
 from users.models import User
+from organizations.models import OrganizationMember
+import logging
 
 
 class BaseUserSerializer(FlexFieldsModelSerializer):
@@ -100,10 +102,43 @@ class BaseUserSerializerUpdate(BaseUserSerializer):
         read_only_fields = ('email',)
 
 
+class UserSerializer(BaseUserSerializer):
+    org_role = serializers.SerializerMethodField(read_only=True)
+
+    def get_org_role(self, obj):
+        org = self.context.get('organization', None)
+        if not org and hasattr(obj, 'active_organization'):
+            org = obj.active_organization
+        if org:
+            try:
+                org_member = OrganizationMember.objects.get(user=obj, organization=org, deleted_at__isnull=True)
+                return org_member.role
+            except OrganizationMember.DoesNotExist:
+                return None
+        return None
+
+    class Meta(BaseUserSerializer.Meta):
+        fields = BaseUserSerializer.Meta.fields + ('org_role',)
+
+
 class UserSimpleSerializer(BaseUserSerializer):
+    org_role = serializers.SerializerMethodField(read_only=True)
+
+    def get_org_role(self, obj):
+        org = self.context.get('organization', None)
+        if not org and hasattr(obj, 'active_organization'):
+            org = obj.active_organization
+        if org:
+            try:
+                org_member = OrganizationMember.objects.get(user=obj, organization=org, deleted_at__isnull=True)
+                return org_member.role
+            except OrganizationMember.DoesNotExist:
+                return None
+        return None
+
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'last_name', 'email', 'avatar')
+        fields = ('id', 'first_name', 'last_name', 'email', 'avatar', 'org_role')
 
 
 class HotkeysSerializer(serializers.Serializer):
@@ -223,6 +258,5 @@ class HotkeysSerializer(serializers.Serializer):
                 raise serializers.ValidationError(f"Invalid modifier or key '{part}' in key combination '{key_combo}'")
 
 
-UserSerializer = load_func(settings.USER_SERIALIZER)
 WhoAmIUserSerializer = load_func(settings.WHOAMI_USER_SERIALIZER)
 UserSerializerUpdate = load_func(settings.USER_SERIALIZER_UPDATE)

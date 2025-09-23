@@ -27,6 +27,7 @@ from label_studio_sdk.label_interface.control_tags import (
     TimeSeriesLabelsTag,
     VideoRectangleTag,
 )
+from organizations.models import OrganizationMember
 from projects.models import Project, ProjectImport, ProjectOnboarding, ProjectReimport, ProjectSummary
 from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
@@ -46,10 +47,19 @@ class CreatedByFromContext:
 
 class ProjectMemberSerializer(serializers.ModelSerializer):
     user = UserSimpleSerializer(read_only=True)
+    org_role = serializers.SerializerMethodField(read_only=True)
+
+    def get_org_role(self, obj):
+        # obj is ProjectMember
+        try:
+            org_member = OrganizationMember.objects.get(user=obj.user, organization=obj.project.organization, deleted_at__isnull=True)
+            return org_member.role
+        except OrganizationMember.DoesNotExist:
+            return None
 
     class Meta:
         model = ProjectMember
-        fields = ['id', 'user', 'enabled', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'enabled', 'created_at', 'updated_at', 'org_role']
 
 
 class ProjectSerializer(FlexFieldsModelSerializer):
