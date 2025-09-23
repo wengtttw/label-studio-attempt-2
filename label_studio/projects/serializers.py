@@ -53,6 +53,7 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(FlexFieldsModelSerializer):
+    created_by_id = serializers.IntegerField(source="created_by.id", read_only=True)
     members = serializers.SerializerMethodField(read_only=True)
 
     def get_members(self, obj):
@@ -237,6 +238,7 @@ class ProjectSerializer(FlexFieldsModelSerializer):
             'model_version',
             'is_draft',
             'created_by',
+            'created_by_id',
             'created_at',
             'min_annotations_to_start_training',
             'start_training_on_annotation_update',

@@ -1,11 +1,14 @@
 import { useState } from "react";
+import { useCurrentUser } from "../../providers/CurrentUser";
 import { Block, Elem } from "../../utils/bem";
 import { useAPI } from "../../providers/ApiProvider";
 import { useProject } from "../../providers/ProjectProvider";
+import "./SelectedUser.scss";
 
 export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) => {
   const api = useAPI();
   const { project } = useProject();
+  const { user: currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,7 +34,7 @@ export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) 
     setError("");
     try {
       await api.callApi("removeProjectMember", {
-        params: { pk: project.id, member_pk: memberInfo.id },
+        params: { pk: project.id, userPk: memberInfo.id },
       });
       onAction && onAction();
     } catch (e) {
@@ -46,7 +49,7 @@ export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) 
     setError("");
     try {
       await api.callApi("updateProjectMember", {
-        params: { pk: project.id, member_pk: memberInfo.id },
+        params: { pk: project.id, userPk: memberInfo.id },
         body: { enabled: !memberInfo.enabled },
       });
       onAction && onAction();
@@ -57,17 +60,30 @@ export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) 
     }
   };
 
+  const isSelf = currentUser && user && currentUser.id === user.id;
+  const isCreator = project && user && project.created_by_id === user.id;
+
+  // Debug logs
+  // console.log('SelectedUser debug:', {
+  //   project,
+  //   selectedUser: user,
+  //   currentUser,
+  //   created_by_id: project && project.created_by_id,
+  //   isSelf,
+  //   isCreator,
+  // });
+
   return (
-    <Block name="selected-user-panel">
-      <Elem name="header">
-        <h3>Selected User</h3>
+    <div className="user-info">
+      <div className="user-info__header">
+        <h3 className="user-info__full-name">Selected User</h3>
         <button onClick={onClose} style={{ float: "right" }}>Close</button>
-      </Elem>
-      <Elem name="body">
-        <div>Email: {user.email}</div>
+      </div>
+      <div className="user-info__section">
+        <div className="user-info__email">Email: {user.email}</div>
         <div>Name: {user.first_name} {user.last_name}</div>
         <div>Status: {isMember ? (memberInfo.enabled ? "Enabled" : "Disabled") : "Not in project"}</div>
-        <div>Role: {isMember ? memberInfo.role : "-"}</div>
+        <div>Role: {isMember ? user.role : "-"}</div>
         {error && <Elem name="error">{error}</Elem>}
         {loading && <Elem name="loading">Processing...</Elem>}
         <div style={{ marginTop: 16 }}>
@@ -76,16 +92,45 @@ export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) 
           )}
           {isMember && (
             <>
-              <button onClick={handleToggle} style={{ marginRight: 8 }}>
+              <button
+                onClick={handleToggle}
+                style={{ marginRight: 8 }}
+                disabled={isSelf || isCreator}
+                title={
+                  isSelf
+                    ? "You cannot disable yourself from the project."
+                    : isCreator
+                    ? "You cannot disable the project creator."
+                    : undefined
+                }
+              >
                 {memberInfo.enabled ? "Disable" : "Enable"}
               </button>
-              <button onClick={handleRemove} style={{ color: "red" }}>
+              <button
+                onClick={handleRemove}
+                style={{ color: "red" }}
+                disabled={isSelf || isCreator}
+                title={
+                  isSelf
+                    ? "You cannot remove yourself from the project."
+                    : isCreator
+                    ? "You cannot remove the project creator."
+                    : undefined
+                }
+              >
                 Remove from Project
               </button>
+              {(isSelf || isCreator) && (
+                <div style={{ color: 'gray', marginTop: 8, fontSize: 13 }}>
+                  {isSelf
+                    ? "You cannot remove or disable yourself from the project."
+                    : "You cannot remove or disable the project creator from the project."}
+                </div>
+              )}
             </>
           )}
         </div>
-      </Elem>
-    </Block>
+      </div>
+    </div>
   );
 };

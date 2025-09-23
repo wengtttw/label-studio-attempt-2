@@ -4,6 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 import logging
 import os
 import pathlib
+import traceback
 
 from core.filters import ListFilter
 from core.label_config import config_essential_data_has_changed
@@ -66,6 +67,9 @@ from rest_framework.response import Response
 from projects.models import ProjectMember, Project
 from projects.serializers import ProjectMemberSerializer
 from django.shortcuts import get_object_or_404
+
+from organizations.models import OrganizationMember
+from projects.models import ProjectMember
 
 logger = logging.getLogger(__name__)
 
@@ -291,7 +295,14 @@ class ProjectListAPI(generics.ListCreateAPIView):
 
     def perform_create(self, ser):
         try:
-            ser.save(organization=self.request.user.active_organization)
+            project = ser.save(organization=self.request.user.active_organization)
+            # Add the creator as an enabled ProjectMember
+            from projects.models import ProjectMember
+            ProjectMember.objects.get_or_create(
+                user=self.request.user,
+                project=project,
+                defaults={"enabled": True},
+            )
         except IntegrityError as e:
             if str(e) == 'UNIQUE constraint failed: project.title, project.created_by_id':
                 raise ProjectExistException(
@@ -964,12 +975,40 @@ class ProjectModelVersions(generics.RetrieveAPIView):
     
     # Custom permission: Only project admin/owner can update enabled status
 class IsProjectAdminOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return True  # Allow all for list/create, restrict in object-level
-
     def has_object_permission(self, request, view, obj):
-        # Only allow update/delete if user is project owner or staff
-        return request.user.is_staff or (hasattr(obj.project, 'created_by') and obj.project.created_by == request.user)
+        print(f"DEBUG: [PERM] Checking {self.__class__.__name__} for obj={repr(obj)}, user={request.user}")
+        #traceback.print_stack()
+        user = request.user
+        project = obj.project if hasattr(obj, 'project') else None
+        is_project_member = False
+        is_org_admin = False
+
+        # Check if user is an enabled project member
+        is_project_member = ProjectMember.objects.filter(
+            project=project, user=user, enabled=True
+        ).exists()
+
+        # Check if user is an active org member with owner/admin role
+        try:
+            org_member = OrganizationMember.objects.get(
+                user=user, organization=project.organization, deleted_at__isnull=True
+            )
+            is_org_admin = org_member.role in ['owner', 'admin']
+        except OrganizationMember.DoesNotExist:
+            is_org_admin = False
+
+        result = is_project_member and is_org_admin
+
+        # Debug prints
+        if not user.is_authenticated:
+            print(f"DEBUG: has_object_permission returning False (user not authenticated)")
+            return False
+        if is_project_member and is_org_admin:
+            print(f"DEBUG: has_object_permission returning True (user is project member and org admin)")
+            return True
+
+        print(f"DEBUG: has_object_permission returning {result} (end of method)")
+        return result
 
 
 class ProjectMemberViewSet(viewsets.ModelViewSet):
@@ -984,20 +1023,37 @@ class ProjectMemberViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         project_id = self.kwargs.get('project_pk') or self.request.data.get('project')
-        user = self.request.data.get('user')
+        user_id = self.request.data.get('user')
         project = get_object_or_404(Project, pk=project_id)
-        serializer.save(project=project, enabled=False)
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = get_object_or_404(User, pk=user_id)
+        serializer.save(project=project, user=user, enabled=False)
 
     def update(self, request, *args, **kwargs):
-        # Only admin/owner can update enabled status
         instance = self.get_object()
-        if not self.check_object_permissions(request, instance):
+        print(f"DEBUG: update called for ProjectMember id={instance.id}, data={request.data}")
+        try:
+            self.check_object_permissions(request, instance)
+        except PermissionDenied:
+            print("DEBUG: update permission denied")
             return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
+        print("DEBUG: update permission granted")
         return super().update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
-        # Only admin/owner can update enabled status
         instance = self.get_object()
-        if not self.check_object_permissions(request, instance):
+        print(f"DEBUG: [TOP] partial_update user={request.user}, ProjectMember id={instance.id}, data={request.data}")
+        print(f"DEBUG: [TOP] instance type={type(instance)}, instance repr={repr(instance)}")
+        print(f"DEBUG: [TOP] permission_classes={self.permission_classes}")
+        for perm in self.get_permissions():
+            print(f"DEBUG: [TOP] permission instance: {perm}")
+        try:
+            self.check_object_permissions(request, instance)
+        except PermissionDenied:
+            print("DEBUG: partial_update permission denied")
             return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
-        return super().partial_update(request, *args, **kwargs)
+        print("DEBUG: partial_update permission granted")
+        response = super().partial_update(request, *args, **kwargs)
+        print(f"DEBUG: [AFTER SUPER] partial_update response status={response.status_code}, data={getattr(response, 'data', None)}")
+        return response
