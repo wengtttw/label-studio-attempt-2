@@ -1,0 +1,49 @@
+title: Single Turn
+type: community
+group: Omnix Evaluation
+image: /static/templates/single-turn.png
+details: |
+  <h1>Label different described features</h1>
+  <dl>
+    <dt>Industry Applications</dt>
+    <dd>scene understanding, visual reasoning, computer vision research, multimodal AI, robotics training, autonomous systems, visual question answering, image captioning, visual relationship detection, scene graph generation, complex scene analysis</dd>
+    <dt>Associated Models</dt>
+    <dd>region detection, attribute classification, relationship extraction, structured scene representation</dd>
+    <dt>Domain Terminology</dt>
+    <dd>scene graphs, visual knowledge, spatial relationships, object interactions, contextual understanding</dd>
+  </dl>
+config: |
+  <View>
+  <style>
+    .lsf-richtext__line {
+    padding-left: 0px;
+    }
+    .ant-form-item{
+      margin: 0 0 4px
+    }
+    .section-box {
+      border: 1px solid #ddd; 
+      border-radius: 12px; 
+      padding: 12px; 
+      margin: 50px 0; 
+      background-color: #f5f7fa;
+    }
+  </style>
+  <Image name="image" value="$image_url" width="100%" height="1000px"/>
+  <View className="section-box" style="margin: 25px 0">
+  <Header name="question" value="❓Question:" size="3"/>
+  <Text name="question_display" value="$question_and_answers.question_0" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0; background-color: #f9f9f9;"/>
+  <Header value="🖼️ Old Caption to be assessed:" size="4"/>
+  <Text name="old_caption" value="$question_and_answers.answer_0" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0; background-color: #f9f9f9;"/>
+  <Header value="✍️ New Caption:" size="4"/>
+  <TextArea name="new_caption" toName="image" defaultvalue="$question_and_answers.answer_0" 
+            placeholder="Type in new caption here" required="true"
+            rows="5" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
+  <Header value="🪧 Reference if any:" size="6"/>
+  <TextArea name="reference" toName="image"
+            placeholder="Type in reference to your caption here if any"
+            rows="2" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
+  </View>
+  <Header value="Confidence Score" size="4" style="margin-top: 20px;"/>
+  <Rating name="confidence" toName="image" maxRating="5" icon="star" size="medium" defaultValue="3" required="true"/>
+  </View>
