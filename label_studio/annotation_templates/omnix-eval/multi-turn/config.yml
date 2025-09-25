@@ -3,14 +3,12 @@ type: community
 group: Omnix Evaluation
 image: /static/templates/multi-turn.png
 details: |
-  <h1>Label different described features</h1>
+  <h1>Label image captions</h1>
   <dl>
-    <dt>Industry Applications</dt>
-    <dd>scene understanding, visual reasoning, computer vision research, multimodal AI, robotics training, autonomous systems, visual question answering, image captioning, visual relationship detection, scene graph generation, complex scene analysis</dd>
-    <dt>Associated Models</dt>
-    <dd>region detection, attribute classification, relationship extraction, structured scene representation</dd>
-    <dt>Domain Terminology</dt>
-    <dd>scene graphs, visual knowledge, spatial relationships, object interactions, contextual understanding</dd>
+    <dt>Image showcase</dt>
+    <dd>Zoom image in and out</dd>
+    <dt>Captioning process/dt>
+    <dd>A context along with question provided, based on that give it a caption</dd>
   </dl>
 config: |
   <View>
@@ -43,7 +41,7 @@ config: |
         style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
                margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="✍️ New Caption:" size="4"/>
-  <TextArea name="new_caption_0" toName="image" value="$question_and_answers.answer_0"
+  <TextArea name="new_caption_0" toName="image"
             placeholder="Type in new caption here"
             rows="10" maxSubmissions="1" required="true"
             style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
@@ -56,7 +54,7 @@ config: |
   <!-- Follow-Up Q1 -->
   <View className="section-box">
   <Header value="❓Follow-Up Question 1" size="3"/>
-  <Text name="followup_q1" value="question_and_answers.question_1"
+  <Text name="followup_q1" value="$question_and_answers.question_1"
         style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
                margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="🖼️ Old Caption to be assessed:"/>
@@ -64,7 +62,7 @@ config: |
         style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
                margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="✍️ New Caption:" size="4"/>
-  <TextArea name="new_caption_1" toName="image" value="$question_and_answers.answer_1"
+  <TextArea name="new_caption_1" toName="image"
             placeholder="Type in new follow up caption 1 here"
             rows="5" maxSubmissions="1" required="true"
             style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0 15px 0;"/>
@@ -85,7 +83,7 @@ config: |
         style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
                margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="✍️ New Caption:" size="3"/>
-  <TextArea name="new_caption_2" toName="image" value="$question_and_answers.answer_2"
+  <TextArea name="new_caption_2" toName="image" 
             placeholder="Type in new follow up caption 2 here"
             rows="5" maxSubmissions="1" required="true"
             style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0 15px 0;"/>
@@ -106,7 +104,7 @@ config: |
         style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
                margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="✍️ New Caption:" size="3"/>
-  <TextArea name="new_caption_3" toName="image" value="$question_and_answers.answer_3"
+  <TextArea name="new_caption_3" toName="image"
             placeholder="Type in new follow up caption 3 here"
             rows="5" maxSubmissions="1" required="true"
             style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0 15px 0;"/>
@@ -127,7 +125,7 @@ config: |
         style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
                margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="✍️ New Caption:" size="4"/>
-  <TextArea name="new_caption_4" toName="image" value="$question_and_answers.answer_4"
+  <TextArea name="new_caption_4" toName="image" 
             placeholder="Type in new follow up caption 4 here"
             rows="5" maxSubmissions="1" required="true"
             style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0 15px 0;"/>

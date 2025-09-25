@@ -3,14 +3,12 @@ type: community
 group: Omnix Evaluation
 image: /static/templates/single-turn.png
 details: |
-  <h1>Label different described features</h1>
+  <h1>Label image captions</h1>
   <dl>
-    <dt>Industry Applications</dt>
-    <dd>scene understanding, visual reasoning, computer vision research, multimodal AI, robotics training, autonomous systems, visual question answering, image captioning, visual relationship detection, scene graph generation, complex scene analysis</dd>
-    <dt>Associated Models</dt>
-    <dd>region detection, attribute classification, relationship extraction, structured scene representation</dd>
-    <dt>Domain Terminology</dt>
-    <dd>scene graphs, visual knowledge, spatial relationships, object interactions, contextual understanding</dd>
+    <dt>Image showcase</dt>
+    <dd>Zoom image in and out</dd>
+    <dt>Captioning process/dt>
+    <dd>A context along with question provided, based on that give it a caption</dd>
   </dl>
 config: |
   <View>
@@ -36,7 +34,7 @@ config: |
   <Header value="🖼️ Old Caption to be assessed:" size="4"/>
   <Text name="old_caption" value="$question_and_answers.answer_0" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="✍️ New Caption:" size="4"/>
-  <TextArea name="new_caption" toName="image" defaultvalue="$question_and_answers.answer_0" 
+  <TextArea name="new_caption" toName="image"
             placeholder="Type in new caption here" required="true"
             rows="5" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
   <Header value="🪧 Reference if any:" size="6"/>
