@@ -74,13 +74,13 @@ export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) 
   // });
 
   return (
-    <div className="user-info">
-      <div className="user-info__header">
+    <Block name="user-info">
+      <Elem name="header">
         <h3 className="user-info__full-name">Selected User</h3>
         <button onClick={onClose} style={{ float: "right" }}>Close</button>
-      </div>
-      <div className="user-info__section">
-        <div className="user-info__email">Email: {user.email}</div>
+      </Elem>
+      <Elem name="section">
+        <Elem name="email">Email: {user.email}</Elem>
         <div>Name: {user.first_name} {user.last_name}</div>
         <div>Status: {isMember ? (memberInfo.enabled ? "Enabled" : "Disabled") : "Not in project"}</div>
         <div>Org Role: {(memberInfo && memberInfo.org_role) || user.org_role || 'N/A'}</div>
@@ -130,7 +130,7 @@ export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) 
             </>
           )}
         </div>
-      </div>
-    </div>
+      </Elem>
+    </Block>
   );
 };
