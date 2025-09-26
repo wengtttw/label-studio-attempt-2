@@ -1,5 +1,5 @@
 import { IconExternal, IconFolderAdd, IconHumanSignal, IconUserAdd, IconFolderOpen } from "@humansignal/icons";
-import { Button, SimpleCard, Spinner, Typography } from "@humansignal/ui";
+import { Button, SimpleCard, Spinner, Typography, ToastType, useToast } from "@humansignal/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -7,6 +7,7 @@ import { HeidiTips } from "../../components/HeidiTips/HeidiTips";
 import { useAPI } from "../../providers/ApiProvider";
 import { CreateProject } from "../CreateProject/CreateProject";
 import { InviteLink } from "../Organization/PeoplePage/InviteLink";
+import { useCurrentUser } from "../../providers/CurrentUser";
 import type { Page } from "../types/Page";
 
 const PROJECTS_TO_SHOW = 10;
@@ -53,6 +54,8 @@ export const HomePage: Page = () => {
   const api = useAPI();
   const [creationDialogOpen, setCreationDialogOpen] = useState(false);
   const [invitationOpen, setInvitationOpen] = useState(false);
+  const { user: currentUser } = useCurrentUser();
+  const toast = useToast();
   const { data, isFetching, isSuccess, isError } = useQuery({
     queryKey: ["projects", { page_size: 10 }],
     async queryFn() {
@@ -62,10 +65,21 @@ export const HomePage: Page = () => {
     },
   });
 
+  // Only disable if user is loaded and not admin/owner
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canCreateProject = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
+
   const handleActions = (action: Action) => {
     return () => {
       switch (action) {
         case "createProject":
+          if (isUserLoaded && !canCreateProject) {
+            toast?.show({
+              type: ToastType.error,
+              message: "Only organization admins and owners can create projects.",
+            });
+            return;
+          }
           setCreationDialogOpen(true);
           break;
         case "inviteMembers":
@@ -97,6 +111,7 @@ export const HomePage: Page = () => {
                   className="flex-grow-0 text-16/24 gap-2 text-primary-content text-left min-w-[250px] [&_svg]:w-6 [&_svg]:h-6 pl-2"
                   onClick={handleActions(action.type)}
                   leading={<action.icon />}
+                  disabled={action.type === "createProject" && isUserLoaded && !canCreateProject}
                 >
                   {action.title}
                 </Button>
@@ -137,7 +152,16 @@ export const HomePage: Page = () => {
                 <Typography size="small" className="text-neutral-content-subtler">
                   Import your data and set up the labeling interface to start annotating
                 </Typography>
-                <Button className="mt-4" onClick={() => setCreationDialogOpen(true)} aria-label="Create new project">
+                <Button className="mt-4" onClick={() => {
+                  if (isUserLoaded && !canCreateProject) {
+                    toast?.show({
+                      type: ToastType.error,
+                      message: "Only organization admins and owners can create projects.",
+                    });
+                    return;
+                  }
+                  setCreationDialogOpen(true);
+                }} aria-label="Create new project" disabled={isUserLoaded && !canCreateProject}>
                   Create Project
                 </Button>
               </div>

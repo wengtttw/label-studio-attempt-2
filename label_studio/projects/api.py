@@ -294,12 +294,21 @@ class ProjectListAPI(generics.ListCreateAPIView):
         return context
 
     def perform_create(self, ser):
+        user = self.request.user
+        org = user.active_organization
+        from organizations.models import OrganizationMember
         try:
-            project = ser.save(organization=self.request.user.active_organization)
+            org_member = OrganizationMember.objects.get(user=user, organization=org, deleted_at__isnull=True)
+        except OrganizationMember.DoesNotExist:
+            raise PermissionDenied('You are not a member of the active organization.')
+        if org_member.role not in ["admin", "owner"]:
+            raise PermissionDenied('Only organization admins and owners can create projects.')
+        try:
+            project = ser.save(organization=org)
             # Add the creator as an enabled ProjectMember
             from projects.models import ProjectMember
             ProjectMember.objects.get_or_create(
-                user=self.request.user,
+                user=user,
                 project=project,
                 defaults={"enabled": True},
             )

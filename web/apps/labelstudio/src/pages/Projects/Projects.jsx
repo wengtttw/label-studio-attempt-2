@@ -12,6 +12,8 @@ import { DataManagerPage } from "../DataManager/DataManager";
 import { SettingsPage } from "../Settings";
 import { EmptyProjectsList, ProjectsList } from "./ProjectsList";
 import { useAbortController } from "@humansignal/core";
+import { useCurrentUser } from "../../providers/CurrentUser";
+import { ToastType, useToast } from "@humansignal/ui";
 import "./Projects.scss";
 
 const getCurrentPage = () => {
@@ -31,8 +33,22 @@ export const ProjectsPage = () => {
   const defaultPageSize = Number.parseInt(localStorage.getItem("pages:projects-list") ?? 30);
 
   const [modal, setModal] = React.useState(false);
+  const { user: currentUser } = useCurrentUser();
+  const toast = useToast();
+  // Only disable if user is loaded and not admin/owner
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canCreateProject = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
-  const openModal = () => setModal(true);
+  const openModal = () => {
+    if (isUserLoaded && !canCreateProject) {
+      toast?.show({
+        type: ToastType.error,
+        title: "Only organization admins and owners can create projects.",
+      });
+      return;
+    }
+    setModal(true);
+  };
 
   const closeModal = () => setModal(false);
 
@@ -129,7 +145,11 @@ export const ProjectsPage = () => {
               pageSize={defaultPageSize}
             />
           ) : (
-            <EmptyProjectsList openModal={openModal} />
+            <EmptyProjectsList 
+              openModal={openModal} 
+              isUserLoaded={isUserLoaded} 
+              canCreateProject={canCreateProject} 
+            />
           )}
           {modal && <CreateProject onClose={closeModal} />}
         </Elem>
@@ -158,9 +178,22 @@ ProjectsPage.routes = ({ store }) => [
   },
 ];
 ProjectsPage.context = ({ openModal, showButton }) => {
+  const { user: currentUser } = useCurrentUser();
+  const toast = useToast();
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canCreateProject = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
   if (!showButton) return null;
   return (
-    <Button onClick={openModal} size="small" aria-label="Create new project">
+    <Button onClick={() => {
+      if (isUserLoaded && !canCreateProject) {
+        toast?.show({
+          type: ToastType.error,
+          title: "Only organization admins and owners can create projects.",
+        });
+        return;
+      }
+      openModal();
+    }} size="small" aria-label="Create new project" disabled={isUserLoaded && !canCreateProject}>
       Create
     </Button>
   );
