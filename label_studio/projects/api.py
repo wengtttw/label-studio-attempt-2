@@ -282,9 +282,9 @@ class ProjectListAPI(generics.ListCreateAPIView):
         user = self.request.user
         # Allow all for owner role
         if hasattr(user, 'role') and user.role == 'owner':
-            return Project.objects.all()
-        # Only show projects where user is creator or member
-        return Project.objects.filter(
+            return Project.objects.with_counts()
+        # Only show projects where user is creator or member, but annotate with counts
+        return Project.objects.with_counts().filter(
             models.Q(created_by=user) | models.Q(members__user=user)
         ).distinct()
 
