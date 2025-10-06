@@ -100,13 +100,24 @@ const displayErrorModal: ErrorDisplayMessage = (errorDetails) => {
         possum={false}
         title={"Connection refused"}
         message={"Server not responding. Is it still running?"}
+        errorId={undefined}
+        stacktrace={undefined}
+        validation={[]}
+        version={undefined}
+        onGoBack={() => {}}
+        onReload={() => {}}
       />
     ) : (
       <ErrorWrapper
         {...formattedError}
         title={title}
         message={message}
+        errorId={undefined}
         stacktrace={IMPROVE_GLOBAL_ERROR_MESSAGES ? undefined : stacktrace}
+        validation={errorDetails.validation}
+        version={errorDetails.version}
+        onGoBack={() => {}}
+        onReload={() => {}}
       />
     ),
     simple: true,
@@ -116,6 +127,7 @@ const displayErrorModal: ErrorDisplayMessage = (errorDetails) => {
 
 const handleError = async (
   response: Response | ApiResponse,
+  toast: ReturnType<typeof useToast> | null,
   displayErrorMessage?: ErrorDisplayMessage,
   showGlobalError = true,
 ) => {
@@ -127,8 +139,20 @@ const handleError = async (
 
   const errorDetails = errorFormatter(result);
 
+  // Custom: Show toast for disabled project member access
+  if (
+    errorDetails.message ===
+    "Your project access is disabled. Please contact your project manager for enabling your status."
+  ) {
+  toast?.show({
+      message: errorDetails.message,
+      type: ToastType.error,
+      duration: API_ERROR_TOAST_DURATION,
+    });
+    return errorDetails.isShutdown;
+  }
+
   // Allow inline error handling
-  console.log(showGlobalError);
   if (!showGlobalError) {
     return errorDetails.isShutdown;
   }
@@ -145,6 +169,7 @@ const handleError = async (
 const handleGlobalErrorMessage = (result?: ApiResponse, errorFilter?: (result: ApiResponse) => boolean) => {
   return result?.error && (!isDefined(errorFilter) || errorFilter(result) === false);
 };
+
 
 export const ApiProvider = forwardRef<ApiContextType, PropsWithChildren<any>>(({ children }, ref) => {
   const [error, setError] = useState<ApiResponse | null>(null);
@@ -248,7 +273,7 @@ export const ApiProvider = forwardRef<ApiContextType, PropsWithChildren<any>>(({
           }
 
           // Use global error handling
-          const isShutdown = await handleError(result, displayErrorToast, contextValue.showGlobalError);
+          const isShutdown = await handleError(result, toast, displayErrorToast, contextValue.showGlobalError);
           apiLocked = apiLocked || isShutdown;
 
           return null;
@@ -257,14 +282,14 @@ export const ApiProvider = forwardRef<ApiContextType, PropsWithChildren<any>>(({
 
       return result as WrappedResponse<T>;
     },
-    [],
+    [toast],
   );
 
   const contextValue: ApiContextType = useMemo(
     () => ({
       api: API,
       callApi,
-      handleError,
+  handleError: (response, displayErrorMessage, showGlobalError) => handleError(response, toast, displayErrorMessage, showGlobalError),
       resetError,
       error,
       showGlobalError: true,

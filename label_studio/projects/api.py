@@ -470,8 +470,10 @@ class ProjectAPI(generics.RetrieveUpdateDestroyAPIView):
             return obj
         if obj.created_by == user:
             return obj
-        # Allow if member
+        # Allow if member and enabled
         if obj.members.filter(user=user).exists():
+            if hasattr(obj, 'has_collaborator_enabled') and not obj.has_collaborator_enabled(user):
+                raise PermissionDenied("Your project access is disabled. Please contact your project manager for enabling your status.")
             return obj
         raise PermissionDenied("You do not have access to this project.")
     parser_classes = (JSONParser, FormParser, MultiPartParser)
