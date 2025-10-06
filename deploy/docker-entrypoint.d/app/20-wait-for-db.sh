@@ -1,1 +1,1 @@
-../common/20-wait-for-db.sh
+/label-studio/deploy/docker-entrypoint.d/common/20-wait-for-db.sh

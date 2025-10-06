@@ -1,1 +1,1 @@
-../common/10-configure-nginx.sh
+/label-studio/deploy/docker-entrypoint.d/common/10-configure-nginx.sh
