@@ -4,6 +4,7 @@ import { Button } from "@humansignal/ui";
 import { Form, Input, TextArea } from "../../components/Form";
 import { RadioGroup } from "../../components/Form/Elements/RadioGroup/RadioGroup";
 import { ProjectContext } from "../../providers/ProjectProvider";
+import { useCurrentUser } from "../../providers/CurrentUser";
 import { Block, Elem } from "../../utils/bem";
 import { HeidiTips } from "../../components/HeidiTips/HeidiTips";
 import { FF_LSDV_E_297, isFF } from "../../utils/feature-flags";
@@ -11,6 +12,11 @@ import { createURL } from "../../components/HeidiTips/utils";
 
 export const GeneralSettings = () => {
   const { project, fetchProject } = useContext(ProjectContext);
+  const { user: currentUser } = useCurrentUser();
+
+  // Only allow admin/owner
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canAccessSettings = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   const updateProject = useCallback(() => {
     if (project.id) fetchProject(project.id, true);
@@ -22,6 +28,21 @@ export const GeneralSettings = () => {
     { value: "Sequential", label: "Sequential", description: "Tasks are ordered by Task ID" },
     { value: "Uniform", label: "Random", description: "Tasks are chosen with uniform random" },
   ];
+
+  if (!canAccessSettings) {
+    return (
+      <Block name="general-settings">
+        <Elem name="wrapper">
+          <h1>General Settings</h1>
+          <Block name="settings-wrapper">
+            <Typography size="large" color="danger">
+              You do not have permission to access this page.
+            </Typography>
+          </Block>
+        </Elem>
+      </Block>
+    );
+  }
 
   return (
     <Block name="general-settings">

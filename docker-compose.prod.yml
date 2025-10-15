@@ -1,14 +1,14 @@
 version: '3.8'
 services:
-  db:
-    image: postgres:13
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=labelstudio2
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=yourpassword
-    ports:
-      - "5432:5432"
+  #db:
+   # image: postgres:13
+    #restart: unless-stopped
+    #environment:
+     # - POSTGRES_DB=labelstudio2
+     # - POSTGRES_USER=postgres
+     # - POSTGRES_PASSWORD=yourpassword
+    #ports:
+     # - "5432:5432"
   app:
     image: your-repo/label-studio:latest
     restart: unless-stopped
@@ -20,7 +20,7 @@ services:
       - POSTGRE_USER=postgres
       - POSTGRE_PASSWORD=yourpassword
       - POSTGRE_PORT=5432
-      - POSTGRE_HOST=db
+      - POSTGRE_HOST=labelstudio2.cd4g2mag86z9.ap-southeast-1.rds.amazonaws.com
       - LABEL_STUDIO_HOST=localhost
       - JSON_LOG=1
     command: label-studio-uwsgi
