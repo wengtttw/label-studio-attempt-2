@@ -6,13 +6,20 @@ import { confirm } from "../../components/Modal/Modal";
 import { Spinner } from "../../components/Spinner/Spinner";
 import { useAPI } from "../../providers/ApiProvider";
 import { useProject } from "../../providers/ProjectProvider";
-import { cn } from "../../utils/bem";
+import { cn, Block, Elem } from "../../utils/bem";
+import { Typography } from "@humansignal/ui";
+import { useCurrentUser } from "../../providers/CurrentUser";
 
 export const DangerZone = () => {
   const { project } = useProject();
   const api = useAPI();
   const history = useHistory();
   const [processing, setProcessing] = useState(null);
+  const { user: currentUser } = useCurrentUser();
+
+  // Only allow admin/owner
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canAccessSettings = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   const handleOnClick = (type) => () => {
     confirm({
@@ -91,6 +98,21 @@ export const DangerZone = () => {
     ],
     [project],
   );
+
+  if (!canAccessSettings) {
+    return (
+      <Block name="general-settings">
+        <Elem name="wrapper">
+          <h1>General Settings</h1>
+          <Block name="settings-wrapper">
+            <Typography size="large" color="danger">
+              You do not have permission to access this page.
+            </Typography>
+          </Block>
+        </Elem>
+      </Block>
+    );
+  }
 
   return (
     <div className={cn("simple-settings")}>

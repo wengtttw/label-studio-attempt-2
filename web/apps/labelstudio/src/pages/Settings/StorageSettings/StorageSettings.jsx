@@ -1,7 +1,8 @@
 import { Typography } from "@humansignal/ui";
 import { useEffect, useRef } from "react";
 import { useHistory, useLocation } from "react-router-dom";
-import { cn } from "../../../utils/bem";
+import { cn, Block, Elem } from "../../../utils/bem";
+import { useCurrentUser } from "../../../providers/CurrentUser";
 import { isInLicense, LF_CLOUD_STORAGE_FOR_MANAGERS } from "../../../utils/license-flags";
 import { StorageSet } from "./StorageSet";
 
@@ -12,6 +13,11 @@ export const StorageSettings = () => {
   const history = useHistory();
   const location = useLocation();
   const sourceStorageRef = useRef();
+  const { user: currentUser } = useCurrentUser();
+  
+  // Only allow admin/owner
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canAccessSettings = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   // Handle auto-open query parameter
   useEffect(() => {
@@ -26,6 +32,21 @@ export const StorageSettings = () => {
       history.replace(location.pathname);
     }
   }, [location, history]);
+
+  if (!canAccessSettings) {
+      return (
+        <Block name="general-settings">
+          <Elem name="wrapper">
+            <h1>General Settings</h1>
+            <Block name="settings-wrapper">
+              <Typography size="large" color="danger">
+                You do not have permission to access this page.
+              </Typography>
+            </Block>
+          </Elem>
+        </Block>
+      );
+    }
 
   return isAllowCloudStorage ? (
     <section className="max-w-[680px]">

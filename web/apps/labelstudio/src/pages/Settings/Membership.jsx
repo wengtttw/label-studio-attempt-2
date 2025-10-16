@@ -1,13 +1,12 @@
-
-
 import { useCallback, useEffect, useState } from "react";
 import { useProject } from "../../providers/ProjectProvider";
 import { useAPI } from "../../providers/ApiProvider";
-import { Block, Elem } from "../../utils/bem";
+import { cn, Block, Elem } from "../../utils/bem";
+import { Typography } from "@humansignal/ui";
+import { useCurrentUser } from "../../providers/CurrentUser";
 
 import "./Membership.scss";
 import { SelectedUser } from "./SelectedUser";
-
 
 export const MembershipSettings = () => {
   const { project } = useProject();
@@ -17,6 +16,11 @@ export const MembershipSettings = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { user: currentUser } = useCurrentUser();
+
+  // Only allow admin/owner
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canAccessSettings = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   // Fetch all users and project members
   const fetchData = useCallback(async () => {
@@ -64,6 +68,21 @@ export const MembershipSettings = () => {
     setSelectedUser(null);
     fetchData();
   };
+
+  if (!canAccessSettings) {
+    return (
+      <Block name="general-settings">
+        <Elem name="wrapper">
+          <h1>General Settings</h1>
+          <Block name="settings-wrapper">
+            <Typography size="large" color="danger">
+              You do not have permission to access this page.
+            </Typography>
+          </Block>
+        </Elem>
+      </Block>
+    );
+  }
 
   return (
     <Block name="simple-settings">

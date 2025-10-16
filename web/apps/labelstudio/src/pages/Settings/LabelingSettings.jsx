@@ -4,6 +4,9 @@ import { useProject } from "../../providers/ProjectProvider";
 import { FF_UNSAVED_CHANGES, isFF } from "../../utils/feature-flags";
 import { isEmptyString } from "../../utils/helpers";
 import { ConfigPage } from "../CreateProject/Config/Config";
+import { cn, Block, Elem } from "../../utils/bem";
+import { Typography } from "@humansignal/ui";
+import { useCurrentUser } from "../../providers/CurrentUser";
 
 export const LabelingSettings = () => {
   const { project, fetchProject, updateProject } = useProject();
@@ -11,6 +14,11 @@ export const LabelingSettings = () => {
   const [essentialDataChanged, setEssentialDataChanged] = useState(false);
   const hasChanges = isFF(FF_UNSAVED_CHANGES) && config !== project.label_config;
   const api = useAPI();
+  const { user: currentUser } = useCurrentUser();
+  
+  // Only allow admin/owner
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canAccessSettings = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   const saveConfig = useCallback(
     isFF(FF_UNSAVED_CHANGES)
@@ -76,6 +84,21 @@ export const LabelingSettings = () => {
   }, []);
 
   if (!project.id) return null;
+
+  if (!canAccessSettings) {
+    return (
+      <Block name="general-settings">
+        <Elem name="wrapper">
+          <h1>General Settings</h1>
+          <Block name="settings-wrapper">
+            <Typography size="large" color="danger">
+              You do not have permission to access this page.
+            </Typography>
+          </Block>
+        </Elem>
+      </Block>
+    );
+  }
 
   return (
     <ConfigPage

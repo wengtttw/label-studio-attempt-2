@@ -2,8 +2,9 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@humansignal/ui";
 import { Form, TextArea, Toggle } from "../../components/Form";
 import { MenubarContext } from "../../components/Menubar/Menubar";
-import { Block, Elem } from "../../utils/bem";
-
+import { cn, Block, Elem } from "../../utils/bem";
+import { Typography } from "@humansignal/ui";
+import { useCurrentUser } from "../../providers/CurrentUser";
 import { ModelVersionSelector } from "./AnnotationSettings/ModelVersionSelector";
 import { ProjectContext } from "../../providers/ProjectProvider";
 import { Divider } from "../../components/Divider/Divider";
@@ -13,6 +14,11 @@ export const AnnotationSettings = () => {
   const pageContext = useContext(MenubarContext);
   const formRef = useRef();
   const [collab, setCollab] = useState(null);
+  const { user: currentUser } = useCurrentUser();
+  
+  // Only allow admin/owner
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canAccessSettings = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   useEffect(() => {
     pageContext.setProps({ formRef });
@@ -21,6 +27,21 @@ export const AnnotationSettings = () => {
   const updateProject = useCallback(() => {
     fetchProject(project.id, true);
   }, [project]);
+
+  if (!canAccessSettings) {
+    return (
+      <Block name="general-settings">
+        <Elem name="wrapper">
+          <h1>General Settings</h1>
+          <Block name="settings-wrapper">
+            <Typography size="large" color="danger">
+              You do not have permission to access this page.
+            </Typography>
+          </Block>
+        </Elem>
+      </Block>
+    );
+  }
 
   return (
     <Block name="annotation-settings">

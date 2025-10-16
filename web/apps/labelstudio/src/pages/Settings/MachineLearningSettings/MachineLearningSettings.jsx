@@ -3,8 +3,10 @@ import { NavLink } from "react-router-dom";
 import { Button, Typography, Spinner, EmptyState, SimpleCard } from "@humansignal/ui";
 import { Form, Label, Toggle } from "../../../components/Form";
 import { modal } from "../../../components/Modal/Modal";
+import { cn, Block, Elem } from "../../../utils/bem";
 import { IconModels, IconExternal } from "@humansignal/icons";
 import { useAPI } from "../../../providers/ApiProvider";
+import { useCurrentUser } from "../../../providers/CurrentUser";
 import { ProjectContext } from "../../../providers/ProjectProvider";
 import { MachineLearningList } from "./MachineLearningList";
 import { CustomBackendForm } from "./Forms";
@@ -18,6 +20,11 @@ export const MachineLearningSettings = () => {
   const [backends, setBackends] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const { user: currentUser } = useCurrentUser();
+  
+  // Only allow admin/owner
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canAccessSettings = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   const fetchBackends = useCallback(async () => {
     setLoading(true);
@@ -91,6 +98,21 @@ export const MachineLearningSettings = () => {
       fetchBackends();
     }
   }, [project.id]);
+
+  if (!canAccessSettings) {
+      return (
+        <Block name="general-settings">
+          <Elem name="wrapper">
+            <h1>General Settings</h1>
+            <Block name="settings-wrapper">
+              <Typography size="large" color="danger">
+                You do not have permission to access this page.
+              </Typography>
+            </Block>
+          </Elem>
+        </Block>
+      );
+    }
 
   return (
     <section>

@@ -6,6 +6,8 @@ import { useAPI } from "../../../providers/ApiProvider";
 import { ProjectContext } from "../../../providers/ProjectProvider";
 import { Spinner } from "../../../components/Spinner/Spinner";
 import { PredictionsList } from "./PredictionsList";
+import { cn, Block, Elem } from "../../../utils/bem";
+import { useCurrentUser } from "../../../providers/CurrentUser";
 
 export const PredictionsSettings = () => {
   const api = useAPI();
@@ -13,6 +15,11 @@ export const PredictionsSettings = () => {
   const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
+    const { user: currentUser } = useCurrentUser();
+  
+  // Only allow admin/owner
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canAccessSettings = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   const fetchVersions = useCallback(async () => {
     setLoading(true);
@@ -33,6 +40,21 @@ export const PredictionsSettings = () => {
       fetchVersions();
     }
   }, [project]);
+
+    if (!canAccessSettings) {
+      return (
+        <Block name="general-settings">
+          <Elem name="wrapper">
+            <h1>General Settings</h1>
+            <Block name="settings-wrapper">
+              <Typography size="large" color="danger">
+                You do not have permission to access this page.
+              </Typography>
+            </Block>
+          </Elem>
+        </Block>
+      );
+    }
 
   return (
     <section className="max-w-[42rem]">
