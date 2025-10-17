@@ -13,7 +13,8 @@ import { Button } from "@humansignal/ui";
  * FIXME: This is legacy imports. We're not supposed to use such statements
  * each one of these eventually has to be migrated to core/ui
  */
-import { API } from "apps/labelstudio/src/providers/ApiProvider";
+import { invoke } from "apps/labelstudio/src/providers/ApiProvider";
+// @ts-ignore: Modal is a JS-only module without TypeScript declarations in apps/
 import { modal, confirm } from "apps/labelstudio/src/components/Modal/Modal";
 import { Input, Label } from "apps/labelstudio/src/components/Form/Elements";
 import { Tooltip } from "@humansignal/ui";
@@ -29,9 +30,9 @@ const ACCESS_TOKENS_QUERY_KEY = ["access-tokens"];
 const tokensListAtom = atomWithQuery(() => ({
   queryKey: ACCESS_TOKENS_QUERY_KEY,
   async queryFn() {
-    const tokens = await API.invoke("accessTokenList");
+    const tokens = await invoke("accessTokenList");
     if (!tokens.$meta.ok) {
-      console.error(token.error);
+      console.error(tokens.error);
       return [];
     }
 
@@ -45,7 +46,7 @@ const refreshTokenAtom = atomWithMutation((get) => {
   return {
     mutationKey: ["refresh-token"],
     async mutationFn() {
-      const token = await API.invoke("accessTokenGetRefreshToken");
+  const token = await invoke("accessTokenGetRefreshToken");
       if (!token.$meta.ok) {
         console.error(token.error);
         return "";
@@ -63,7 +64,7 @@ const revokeTokenAtom = atomWithMutation((get) => {
   return {
     mutationKey: ["revoke"],
     async mutationFn({ token }: { token: string }) {
-      await API.invoke("accessTokenRevoke", null, {
+  await invoke("accessTokenRevoke", null, {
         params: {},
         body: {
           refresh: token,

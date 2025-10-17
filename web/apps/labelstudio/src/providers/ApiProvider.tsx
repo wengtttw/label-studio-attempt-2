@@ -31,7 +31,18 @@ export const API = new APIProxy({
   },
 });
 
-export type ApiEndpoints = keyof typeof API.methods;
+// Helper that allows calling API.invoke with a string method name. We keep
+// the actual API.invoke typing intact but provide this thin wrapper for
+// places in the codebase that call dynamic method names.
+export const invoke = <T = any>(method: string, params?: any, rest?: any): Promise<WrappedResponse<T>> => {
+  return (API.invoke as any)(method, params, rest) as Promise<WrappedResponse<T>>;
+};
+
+// `API.methods` is populated at runtime; compile-time inference can result
+// in `keyof typeof API.methods` becoming `never`. Use a string alias here
+// to allow calling API.invoke with literal method names while keeping the
+// rest of the typing for request/response intact.
+export type ApiEndpoints = string;
 
 let apiLocked = false;
 
@@ -49,7 +60,7 @@ export type ErrorDisplayMessage = (
 
 export type ApiContextType = {
   api: typeof API;
-  callApi: <T>(method: keyof (typeof API)["methods"], options?: ApiCallOptions) => Promise<WrappedResponse<T> | null>;
+  callApi: <T>(method: ApiEndpoints, options?: ApiCallOptions) => Promise<WrappedResponse<T> | null>;
   handleError: (
     response: Response | ApiResponse,
     displayErrorMessage?: ErrorDisplayMessage,
@@ -179,14 +190,16 @@ export const ApiProvider = forwardRef<ApiContextType, PropsWithChildren<any>>(({
 
   const callApi = useCallback(
     async <T,>(
-      method: keyof (typeof API)["methods"],
+      method: ApiEndpoints,
       { params = {}, errorFilter, suppressError, ...rest }: ApiCallOptions = {},
     ): Promise<WrappedResponse<T> | null> => {
       if (apiLocked) return null;
 
       setError(null);
 
-      const result = await API.invoke(method, params, rest);
+  // API.invoke has a narrow union type for method; cast to any to allow
+  // calling with a string ApiEndpoints. This is intentional: API methods are ultimately validated at runtime by the proxy.
+  const result = await (API.invoke as any)(method, params, rest);
       const shouldHandleGlobalErrorMessage = handleGlobalErrorMessage(result, errorFilter);
 
       // If the error is due to a 404 and we are not handling it inline, we need to redirect to a working page

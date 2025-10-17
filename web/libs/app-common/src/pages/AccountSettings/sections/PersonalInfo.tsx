@@ -2,7 +2,7 @@ import { type FormEventHandler, useCallback, useEffect, useRef, useState } from 
 import clsx from "clsx";
 import { Button, InputFile, ToastType, useToast, Userpic } from "@humansignal/ui";
 // @todo we should not use anything from `apps` in `libs`
-import { API } from "apps/labelstudio/src/providers/ApiProvider";
+import { invoke } from "apps/labelstudio/src/providers/ApiProvider";
 import styles from "../AccountSettings.module.scss";
 import { useCurrentUserAtom } from "@humansignal/core/lib/hooks/useCurrentUser";
 import { atomWithMutation } from "jotai-tanstack-query";
@@ -22,19 +22,15 @@ const updateUserAvatarAtom = atomWithMutation(() => ({
     isDelete,
   }: { userId: number; body: FormData; isDelete?: never } | { userId: number; isDelete: true; body?: never }) {
     const method = isDelete ? "deleteUserAvatar" : "updateUserAvatar";
-    const response = await API.invoke(
-      method,
-      {
-        pk: userId,
+    const response = await invoke(method, {
+      pk: userId,
+    }, {
+      body,
+      headers: {
+        "Content-Type": "multipart/form-data",
       },
-      {
-        body,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        errorFilter: () => true,
-      },
-    );
+      errorFilter: () => true,
+    });
     return response;
   },
 }));
@@ -61,7 +57,7 @@ export const PersonalInfo = () => {
       });
 
       if (!response.$meta.ok) {
-        toast.show({ message: response?.response?.detail ?? "Error updating avatar", type: ToastType.error });
+        toast?.show({ message: response?.response?.detail ?? "Error updating avatar", type: ToastType.error });
       } else {
         refetchUser();
       }
@@ -86,7 +82,7 @@ export const PersonalInfo = () => {
 
       refetchUser();
       if (!response?.$meta.ok) {
-        toast.show({ message: response?.response?.detail ?? "Error updating user", type: ToastType.error });
+        toast?.show({ message: response?.response?.detail ?? "Error updating user", type: ToastType.error });
       }
     },
     [user?.id],
@@ -155,7 +151,7 @@ export const PersonalInfo = () => {
             </div>
           </div>
           <div className={clsx(styles.flexRow, styles.flexEnd)}>
-            <Button look="primary" style={{ width: 125 }} waiting={isInProgress}>
+            <Button look="filled" style={{ width: 125 }} waiting={isInProgress}>
               Save
             </Button>
           </div>

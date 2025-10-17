@@ -1,4 +1,4 @@
-import { API } from "apps/labelstudio/src/providers/ApiProvider";
+import { invoke } from "apps/labelstudio/src/providers/ApiProvider";
 
 export const importFiles = async ({
   files,
@@ -27,7 +27,7 @@ export const importFiles = async ({
     body instanceof FormData
       ? "multipart/form-data" // usual multipart for usual files
       : "application/x-www-form-urlencoded"; // chad urlencoded for URL uploads
-  const res = await API.invoke(
+  const res = await invoke(
     "importFiles",
     { pk: project.id, ...query },
     { headers: { "Content-Type": contentType }, body },

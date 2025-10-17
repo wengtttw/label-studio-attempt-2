@@ -4,7 +4,7 @@ import { IconCross } from "@humansignal/icons";
 import { Userpic, Button } from "@humansignal/ui";
 import { Block, Elem } from "../../../utils/bem";
 import { useQuery } from "@tanstack/react-query";
-import { API } from "apps/labelstudio/src/providers/ApiProvider";
+import { invoke } from "apps/labelstudio/src/providers/ApiProvider";
 import "./SelectedUser.scss";
 import { useEffect, useState } from "react";
 import { useCurrentUserAtom } from "@humansignal/core/lib/hooks/useCurrentUser";
@@ -49,7 +49,7 @@ export const SelectedUser = ({ user, onClose }) => {
     queryKey: [currentUser?.active_organization, currentUser?.id, "user-membership"],
     queryFn: async () => {
       if (!currentUser?.active_organization || !currentUser?.id) return null;
-      return await API.invoke("userMemberships", {
+      return await invoke("userMemberships", {
         pk: currentUser.active_organization,
         userPk: currentUser.id,
       });
@@ -62,7 +62,7 @@ export const SelectedUser = ({ user, onClose }) => {
     queryKey: [user?.active_organization, user?.id, "user-membership"],
     queryFn: async () => {
       if (!user?.active_organization  || !user.id) return null;
-      return await API.invoke("userMemberships", {
+      return await invoke("userMemberships", {
         pk: user.active_organization,
         userPk: user.id,
       });

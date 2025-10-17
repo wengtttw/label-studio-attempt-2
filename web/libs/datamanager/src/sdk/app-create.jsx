@@ -50,6 +50,9 @@ export const createApp = async (rootNode, datamanager) => {
 
   createDynamicModels(columns);
 
+  const rawActions = Array.from(datamanager.actions.values()).map(({ action }) => action);
+  const filteredActions = rawActions;
+
   const appStore = AppStore.create({
     viewsStore: {
       views: [],
@@ -60,7 +63,7 @@ export const createApp = async (rootNode, datamanager) => {
     showPreviews: datamanager.showPreviews,
     interfaces: Object.fromEntries(datamanager.interfaces),
     toolbar: datamanager.toolbar,
-    availableActions: Array.from(datamanager.actions.values()).map(({ action }) => action),
+    availableActions: filteredActions,
   });
 
   appStore._sdk = datamanager;

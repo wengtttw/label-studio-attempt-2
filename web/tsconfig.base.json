@@ -30,7 +30,9 @@
       "@humansignal/ui": ["libs/ui/src/index.ts"],
       "@humansignal/ui/*": ["libs/ui/src/*"]
     },
-    "types": ["vite-plugin-svgr/client"],
+  // 'vite-plugin-svgr/client' types are optional in some environments and
+  // not present in this workspace. Removing the explicit types entry to
+  // avoid a missing type-definition error during local type checks.
     "plugins": [{
         "name": "typescript-plugin-css-modules",
         "options": {

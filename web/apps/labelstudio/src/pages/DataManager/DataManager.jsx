@@ -8,6 +8,7 @@ import { Space } from "../../components/Space/Space";
 import { useAPI } from "../../providers/ApiProvider";
 import { useProject } from "../../providers/ProjectProvider";
 import { useCurrentUser } from "../../providers/CurrentUser";
+import { canManageProject } from "../../utils/role";
 import { useContextProps, useParams } from "../../providers/RoutesProvider";
 import { addCrumb, deleteCrumb } from "../../services/breadrumbs";
 import { Block, Elem } from "../../utils/bem";
@@ -86,9 +87,8 @@ export const DataManagerPage = ({ ...props }) => {
 
     const interactiveBacked = (mlBackends ?? []).find(({ is_interactive }) => is_interactive);
 
-    // Determine whether import/export should be enabled for this user
-    const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
-    const canManageImports = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
+  // Determine whether import/export should be enabled for this user
+  const canManageImports = canManageProject(currentUser);
 
     const dmProps = {
       ...props,
@@ -97,6 +97,8 @@ export const DataManagerPage = ({ ...props }) => {
         import: canManageImports,
         export: canManageImports,
       },
+  // pass current user's role to the datamanager so the SDK can adapt available actions
+  role: currentUser?.org_role,
     };
 
     const dataManager = (dataManagerRef.current =
@@ -236,11 +238,44 @@ export const DataManagerPage = ({ ...props }) => {
     }
   }, []);
 
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+
   useEffect(() => {
+    // Wait until dependencies are loaded and the current user's role is known so
+    // the DataManager receives the role in its config and can filter actions on init.
+    if (!isUserLoaded) return;
+
     Promise.all(dependencies)
       .then(() => setLoading(false))
       .then(init);
-  }, [init]);
+  }, [init, isUserLoaded]);
+
+  // Ensure DataManager actions are filtered when the user's role becomes available.
+  useEffect(() => {
+    const dm = dataManagerRef.current;
+    if (!dm) return;
+
+    // set role on datamanager instance so its addAction logic can use it
+    try {
+      dm.role = currentUser?.org_role ?? dm.role;
+    } catch (e) {
+      // ignore
+    }
+
+    const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+    const isAdminOrOwner = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
+
+    if (isUserLoaded && !isAdminOrOwner) {
+      const allowed = new Set(["delete_annotations", "delete_tasks_annotations"]);
+      try {
+        for (const id of Array.from(dm.actions.keys())) {
+          if (!allowed.has(id)) dm.removeAction(id);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [currentUser?.org_role, projectId]);
 
   useEffect(() => {
     // destroy the data manager when the component is unmounted

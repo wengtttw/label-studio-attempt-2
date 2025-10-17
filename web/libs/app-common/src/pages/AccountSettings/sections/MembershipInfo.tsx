@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import styles from "./MembershipInfo.module.scss";
 import { useQuery } from "@tanstack/react-query";
-import { API } from "apps/labelstudio/src/providers/ApiProvider";
+import { API, invoke } from "apps/labelstudio/src/providers/ApiProvider";
 import { useMemo } from "react";
 import type { WrappedResponse } from "@humansignal/core/lib/api-proxy/types";
 import { useCurrentUserAtom } from "@humansignal/core/lib/hooks/useCurrentUser";
@@ -21,7 +21,7 @@ export const MembershipInfo = () => {
     queryKey: [user?.active_organization, user?.id, "user-membership"],
     async queryFn() {
       if (!user) return {};
-      const response = (await API.invoke("userMemberships", {
+      const response = (await invoke("userMemberships", {
         pk: user.active_organization,
         userPk: user.id,
       })) as WrappedResponse<{
@@ -77,7 +77,7 @@ export const MembershipInfo = () => {
     async queryFn() {
       if (!user) return null;
       if (!window?.APP_SETTINGS?.billing) return null;
-      const organization = (await API.invoke("organization", {
+      const organization = (await invoke("organization", {
         pk: user.active_organization,
       })) as WrappedResponse<{
         id: number;

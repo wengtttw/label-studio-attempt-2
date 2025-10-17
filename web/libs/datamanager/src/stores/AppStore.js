@@ -174,6 +174,33 @@ export const AppStore = types
 
     setActions(actions) {
       if (!Array.isArray(actions)) throw new Error("Actions must be an array");
+
+      // If the store knows the datamanager user role, filter actions for non-admin/owner users
+      try {
+        const role = self._sdk?.userRole ?? self._sdk?.role;
+        // Debugging info: log incoming actions and role to help diagnose
+        // why availableActions is empty in some runtime cases.
+        try {
+          console.debug && console.debug('[AppStore.setActions] role=', role, 'incoming ids=', (actions || []).map?.(a => a.id));
+        } catch (e) {
+          // ignore logging errors
+        }
+
+        if (role && !["admin", "owner"].includes(role)) {
+          // The backend registers delete-related actions under IDs like `delete_tasks_annotations`. Allow those IDs here so non-admin
+          // users still see the Delete Annotations option. Keep a backward-compatible alias too.
+          const allowed = new Set(["delete_tasks_annotations"]);
+          const filtered = actions.filter((a) => allowed.has(a.id));
+          try {
+            console.debug && console.debug('[AppStore.setActions] filtered ids=', filtered.map?.(a => a.id));
+          } catch (e) {
+          }
+          self.availableActions = filtered;
+          return;
+        }
+      } catch (e) {
+      }
+
       self.availableActions = actions;
     },
 

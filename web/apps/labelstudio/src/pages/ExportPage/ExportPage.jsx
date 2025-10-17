@@ -9,6 +9,7 @@ import { useFixedLocation, useParams } from "../../providers/RoutesProvider";
 import { BemWithSpecifiContext } from "../../utils/bem";
 import { isDefined } from "../../utils/helpers";
 import { useCurrentUser } from "../../providers/CurrentUser";
+import { canManageProject } from "../../utils/role";
 import "./ExportPage.scss";
 
 // const formats = {
@@ -41,8 +42,7 @@ export const ExportPage = () => {
   const [currentFormat, setCurrentFormat] = useState("JSON");
 
   const { user: currentUser } = useCurrentUser();
-  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
-  const canExport = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
+  const canExport = canManageProject(currentUser);
 
   /** @type {import('react').RefObject<Form>} */
   const form = useRef();

@@ -1,5 +1,5 @@
 import { isDefined } from "@humansignal/core/lib/utils/helpers";
-import { API } from "apps/labelstudio/src/providers/ApiProvider";
+import { invoke } from "apps/labelstudio/src/providers/ApiProvider";
 import { projectAtom } from "apps/labelstudio/src/providers/ProjectProvider";
 import { atomWithQuery } from "jotai-tanstack-query";
 
@@ -10,7 +10,7 @@ export const sampleDatasetAtom = atomWithQuery((get) => {
     queryKey: [labelConfig, project, "sample-data"],
     enabled: isDefined(labelConfig) && labelConfig !== "<View></View>",
     async queryFn() {
-      const response = await API.invoke(
+      const response = await invoke(
         "createSampleTask",
         { pk: project.id },
         {

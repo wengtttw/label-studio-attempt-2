@@ -2,7 +2,7 @@ import { Button, Typography } from "@humansignal/ui";
 import { Space } from "@humansignal/ui/lib/space/space";
 import { Block } from "apps/labelstudio/src/components/Menu/MenuContext";
 import { Modal } from "apps/labelstudio/src/components/Modal/ModalPopup";
-import { API } from "apps/labelstudio/src/providers/ApiProvider";
+import { invoke } from "apps/labelstudio/src/providers/ApiProvider";
 import { useAtomValue } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -13,8 +13,8 @@ const linkAtom = atomWithQuery(() => ({
   async queryFn() {
     // called only once when the component is rendered on page reload
     // will also be reset when called `refetch()` on the Reset button
-    const result = await API.invoke("resetInviteLink");
-    return location.origin + result.invite_url;
+  const result = await invoke("resetInviteLink");
+  return location.origin + result.invite_url;
   },
 }));
 

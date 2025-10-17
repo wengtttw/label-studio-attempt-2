@@ -1,5 +1,5 @@
 import type { APIUser } from "@humansignal/core/types/user";
-import { API } from "apps/labelstudio/src/providers/ApiProvider";
+import { invoke } from "apps/labelstudio/src/providers/ApiProvider";
 import { useAtomValue } from "jotai";
 import { atomWithMutation, atomWithQuery, queryClientAtom } from "jotai-tanstack-query";
 import { useCallback } from "react";
@@ -7,14 +7,14 @@ import { useCallback } from "react";
 const currentUserAtom = atomWithQuery(() => ({
   queryKey: ["current-user"],
   async queryFn() {
-    return await API.invoke<APIUser>("me");
+    return await invoke<APIUser>("me");
   },
 }));
 
 const currentUserUpdateAtom = atomWithMutation((get) => ({
   mutationKey: ["update-current-user"],
   async mutationFn({ pk, user }: { pk: number; user: Partial<APIUser> }) {
-    return await API.invoke<APIUser>("updateUser", { pk }, { body: user });
+  return await invoke<APIUser>("updateUser", { pk }, { body: user });
   },
 
   onSettled() {
