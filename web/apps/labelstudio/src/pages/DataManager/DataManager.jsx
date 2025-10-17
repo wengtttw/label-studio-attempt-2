@@ -7,6 +7,7 @@ import { modal } from "../../components/Modal/Modal";
 import { Space } from "../../components/Space/Space";
 import { useAPI } from "../../providers/ApiProvider";
 import { useProject } from "../../providers/ProjectProvider";
+import { useCurrentUser } from "../../providers/CurrentUser";
 import { useContextProps, useParams } from "../../providers/RoutesProvider";
 import { addCrumb, deleteCrumb } from "../../services/breadrumbs";
 import { Block, Elem } from "../../utils/bem";
@@ -65,6 +66,7 @@ export const DataManagerPage = ({ ...props }) => {
   const history = useHistory();
   const api = useAPI();
   const { project } = useProject();
+  const { user: currentUser } = useCurrentUser();
   const setContextProps = useContextProps();
   const [crashed, setCrashed] = useState(false);
   const [loading, setLoading] = useState(!window.DataManager || !window.LabelStudio);
@@ -84,9 +86,22 @@ export const DataManagerPage = ({ ...props }) => {
 
     const interactiveBacked = (mlBackends ?? []).find(({ is_interactive }) => is_interactive);
 
+    // Determine whether import/export should be enabled for this user
+    const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+    const canManageImports = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
+
+    const dmProps = {
+      ...props,
+      interfaces: {
+        // Allow DataManager to render import/export controls only for admins/owners
+        import: canManageImports,
+        export: canManageImports,
+      },
+    };
+
     const dataManager = (dataManagerRef.current =
       dataManagerRef.current ??
-      (await initializeDataManager(root.current, props, {
+      (await initializeDataManager(root.current, dmProps, {
         ...params,
         project,
         autoAnnotation: isDefined(interactiveBacked),
@@ -123,6 +138,18 @@ export const DataManagerPage = ({ ...props }) => {
     });
 
     dataManager.on("importClicked", () => {
+      const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+      const canManage = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
+
+      if (isUserLoaded && !canManage) {
+        toast?.show({
+          message: "Only organization admins and owners can import data into a project.",
+          type: ToastType.error,
+          duration: 5000,
+        });
+        return;
+      }
+
       history.push(buildLink("/data/import", { id: params.id }));
     });
 
@@ -132,6 +159,18 @@ export const DataManagerPage = ({ ...props }) => {
     });
 
     dataManager.on("exportClicked", () => {
+      const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+      const canManage = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
+
+      if (isUserLoaded && !canManage) {
+        toast?.show({
+          message: "Only organization admins and owners can export project data.",
+          type: ToastType.error,
+          duration: 5000,
+        });
+        return;
+      }
+
       history.push(buildLink("/data/export", { id: params.id }));
     });
 

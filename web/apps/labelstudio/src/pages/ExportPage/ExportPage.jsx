@@ -8,6 +8,7 @@ import { useAPI } from "../../providers/ApiProvider";
 import { useFixedLocation, useParams } from "../../providers/RoutesProvider";
 import { BemWithSpecifiContext } from "../../utils/bem";
 import { isDefined } from "../../utils/helpers";
+import { useCurrentUser } from "../../providers/CurrentUser";
 import "./ExportPage.scss";
 
 // const formats = {
@@ -38,6 +39,10 @@ export const ExportPage = () => {
   const [downloadingMessage, setDownloadingMessage] = useState(false);
   const [availableFormats, setAvailableFormats] = useState([]);
   const [currentFormat, setCurrentFormat] = useState("JSON");
+
+  const { user: currentUser } = useCurrentUser();
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canExport = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   /** @type {import('react').RefObject<Form>} */
   const form = useRef();
@@ -132,7 +137,14 @@ export const ExportPage = () => {
             <Elem name="actions">
               <Space>
                 {downloadingMessage && "Files are being prepared. It might take some time."}
-                <Button className="w-[135px]" onClick={proceedExport} waiting={downloading} aria-label="Export data">
+                <Button
+                  className="w-[135px]"
+                  onClick={proceedExport}
+                  waiting={downloading}
+                  aria-label="Export data"
+                  disabled={isUserLoaded && !canExport}
+                  title={isUserLoaded && !canExport ? "Only organization admins and owners can export data." : undefined}
+                >
                   Export
                 </Button>
               </Space>
