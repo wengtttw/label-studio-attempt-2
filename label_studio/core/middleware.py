@@ -275,17 +275,17 @@ class InactiveUserRedirectMiddleware(MiddlewareMixin):
     Redirect users with the 'inactive' role to the inactive page.
     """
     def process_request(self, request):
-        # Only check for authenticated users
-        if (
-            hasattr(request, 'user')
-            and request.user.is_authenticated
-            and not request.path.startswith(reverse('user_inactive'))
-            and not request.path.startswith(reverse('logout'))
-            and not request.path.startswith('/admin')  # Allow admin access
-        ):
-            try:
-                org_member = OrganizationMember.objects.get(user=request.user, deleted_at__isnull=True)
-                if org_member.role == 'inactive':
-                    return redirect('user_inactive')
-            except OrganizationMember.DoesNotExist:
-                pass
+        if not (hasattr(request, 'user') and request.user.is_authenticated):
+            return
+        if request.path.startswith(reverse('user_inactive')) or request.path.startswith(reverse('logout')) or request.path.startswith('/admin'):
+            return
+
+        org = getattr(request.user, 'active_organization', None)
+        if org is not None:
+            org_member = OrganizationMember.objects.filter(user=request.user, organization=org, deleted_at__isnull=True).first()
+        else:
+            org_member = OrganizationMember.objects.filter(user=request.user, deleted_at__isnull=True).first()
+
+        if org_member and org_member.role == 'inactive':
+            logger.info('Redirecting inactive user %s to inactive page', request.user.email)
+            return redirect('user_inactive')
