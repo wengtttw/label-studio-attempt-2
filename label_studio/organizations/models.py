@@ -109,6 +109,13 @@ class OrganizationMember(OrganizationMemberMixin, models.Model):
     class Meta:
         ordering = ['pk']
 
+        #Changes by Chris, added indexes for faster lookup.
+        indexes=[
+            models.Index(fields=[ 'user', 'organization','deleted_at' ],name='org_member_lookup_idx'),
+            models.Index(fields=['organization','role'],name='org_member_role_idx'),
+            models.Index(fields=['role'],name='org_member_global_role_idx'),
+        ]
+
     def soft_delete(self):
         with transaction.atomic():
             self.deleted_at = timezone.now()

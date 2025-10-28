@@ -5,6 +5,10 @@ import { useAPI } from "../../providers/ApiProvider";
 import { useProject } from "../../providers/ProjectProvider";
 import "./SelectedUser.scss";
 
+{/* Chris edits 28 October */}
+import { Button } from "@humansignal/ui";
+{/* Chris edits 28 October end */}
+
 export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) => {
   const api = useAPI();
   const { project } = useProject();
@@ -87,12 +91,25 @@ export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) 
         {error && <Elem name="error">{error}</Elem>}
         {loading && <Elem name="loading">Processing...</Elem>}
         <div style={{ marginTop: 16 }}>
-          {!isMember && (
+          {/* {!isMember && (
             <button onClick={handleAdd}>Add to Project</button>
+          )} */}
+          {/* Chris edits 28 October */}
+          {!isMember && (
+            <Button
+              variant="primary"
+              look="filled"
+              size="small"
+              onClick={handleAdd}
+              disabled={loading}
+            >
+              Add to Project
+            </Button>
           )}
+          {/* Chris edits 28 October */}
           {isMember && (
             <>
-              <button
+              {/* <button
                 onClick={handleToggle}
                 style={{ marginRight: 8 }}
                 disabled={isSelf || isCreator}
@@ -105,7 +122,27 @@ export const SelectedUser = ({ user, isMember, memberInfo, onClose, onAction }) 
                 }
               >
                 {memberInfo.enabled ? "Disable" : "Enable"}
-              </button>
+              </button> */}
+
+              {/* Chris edits 28 October */}
+              <Button
+                variant="neutral"
+                look="outlined"
+                size="small"
+                onClick={handleToggle}
+                disabled={isSelf || isCreator}
+                tooltip={
+                  isSelf
+                    ? "You cannot disable yourself from the project."
+                    : isCreator
+                    ? "You cannot disable the project creator."
+                    : undefined
+                }
+                style={{ marginRight: 8 }}
+              >
+                {memberInfo.enabled ? "Disable" : "Enable"}
+              </Button>
+              {/* Chris edits 28 October end*/}
               <button
                 onClick={handleRemove}
                 style={{ color: "red" }}

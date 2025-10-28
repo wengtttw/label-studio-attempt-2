@@ -257,3 +257,10 @@ Include a citation for Label Studio in the **References** section of your articl
 This software is licensed under the [Apache 2.0 LICENSE](/LICENSE) © [Heartex](https://www.heartex.com/). 2020-2025
 
 <img src="https://user-images.githubusercontent.com/12534576/192582529-cf628f58-abc5-479b-a0d4-8a3542a4b35e.png" title="Hey everyone!" width="180" />
+
+## Docker command for execution
+docker run -it -p 8080:8080 -v C:\Users\Admin\Desktop\Workitems\label_me\label_studio_src\label_studio_docker_volume_mount:/label-studio/data label-studio-dev
+
+
+ProjectAdmin1@gmail.com
+ProjectAnnotator1@gmail.com
