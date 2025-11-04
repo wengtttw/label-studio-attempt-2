@@ -162,6 +162,7 @@ COPY --chown=1001:0 --from=frontend-version-generator $LS_DIR/web/dist/apps/labe
 COPY --chown=1001:0 --from=frontend-version-generator $LS_DIR/web/dist/libs/editor/version.json         $LS_DIR/web/dist/libs/editor/version.json
 COPY --chown=1001:0 --from=frontend-version-generator $LS_DIR/web/dist/libs/datamanager/version.json    $LS_DIR/web/dist/libs/datamanager/version.json
 
+
 USER 1001
 
 EXPOSE 8080
