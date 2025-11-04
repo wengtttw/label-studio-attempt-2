@@ -65,6 +65,8 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
 class ProjectSerializer(FlexFieldsModelSerializer):
     created_by_id = serializers.IntegerField(source="created_by.id", read_only=True)
     members = serializers.SerializerMethodField(read_only=True)
+    # workspace: return workspace id if set (so frontend can filter by workspace)
+    workspace = serializers.IntegerField(source="workspace.id", read_only=True)
 
     def get_members(self, obj):
         members = obj.members.select_related('user').all()
@@ -242,6 +244,7 @@ class ProjectSerializer(FlexFieldsModelSerializer):
             'enable_empty_annotation',
             'show_annotation_history',
             'organization',
+            'workspace',
             'color',
             'maximum_annotations',
             'is_published',
