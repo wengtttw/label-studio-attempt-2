@@ -1,0 +1,30 @@
+.workspaces-page__wrapper {
+  padding: 16px;
+}
+
+.workspaces-page__list {
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.workspaces-page__header,
+.workspaces-page__item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  padding: 12px 16px;
+  align-items: center;
+}
+
+.workspaces-page__header {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.workspaces-page__item:nth-child(odd) {
+  background: #fff;
+}
+
+.workspaces-page__item:nth-child(even) {
+  background: #f8f8f8;
+}

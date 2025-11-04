@@ -23,6 +23,7 @@ from projects.models import Project
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import get_object_or_404
+from django.utils import timezone
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -431,3 +432,142 @@ class UpdateUserRoleAPI(APIView):
         member.role = new_role
         member.save()
         return Response({'success': True, 'role': member.role}, status=200)
+
+
+@method_decorator(
+    name='get',
+    decorator=extend_schema(
+        tags=['Workspaces'],
+        summary='List workspaces for current user',
+        description='Return list of workspaces that the current authenticated user is a member of.',
+    ),
+)
+class WorkspaceListAPI(generics.ListAPIView):
+    parser_classes = (JSONParser,)
+    permission_classes = [IsAuthenticated]
+    serializer_class = __import__('organizations.serializers', fromlist=['WorkspaceSerializer']).WorkspaceSerializer
+
+    def get_queryset(self):
+        # workspaces where the requesting user has an active WorkspaceMember
+        from organizations.models import WorkspaceMember
+
+        return (
+            self.request.user.workspaces.filter(
+                workspacemember__in=WorkspaceMember.objects.filter(user=self.request.user, deleted_at__isnull=True)
+            )
+            .distinct()
+            .order_by('-created_at')
+        )
+
+
+class WorkspaceCreateAPI(generics.ListCreateAPIView):
+    """List and create workspaces for the current organization."""
+    parser_classes = (JSONParser,)
+    permission_required = ViewClassPermission(
+        GET=all_permissions.organizations_view,
+        POST=all_permissions.organizations_create,
+    )
+    serializer_class = __import__('organizations.serializers', fromlist=['WorkspaceSerializer']).WorkspaceSerializer
+
+    def get_queryset(self):
+        org = self.request.user.active_organization
+        return org.workspaces.all().order_by('-created_at')
+
+    def perform_create(self, serializer):
+        org = self.request.user.active_organization
+        serializer.save(created_by=self.request.user, organization=org)
+
+
+class WorkspaceDetailAPI(generics.RetrieveUpdateDestroyAPIView):
+    parser_classes = (JSONParser,)
+    permission_required = ViewClassPermission(
+        GET=all_permissions.organizations_view,
+        PUT=all_permissions.organizations_change,
+        PATCH=all_permissions.organizations_change,
+        DELETE=all_permissions.organizations_change,
+    )
+    serializer_class = __import__('organizations.serializers', fromlist=['WorkspaceSerializer']).WorkspaceSerializer
+
+    def get_queryset(self):
+        org = self.request.user.active_organization
+        return org.workspaces.all()
+
+
+class WorkspaceMemberListAPI(generics.ListCreateAPIView):
+    """List and add members to a workspace."""
+    parser_classes = (JSONParser,)
+    permission_required = ViewClassPermission(
+        GET=all_permissions.organizations_view,
+        POST=all_permissions.organizations_change,
+    )
+    serializer_class = __import__('organizations.serializers', fromlist=['WorkspaceMemberSerializer']).WorkspaceMemberSerializer
+
+    def get_queryset(self):
+        workspace = generics.get_object_or_404(self.request.user.active_organization.workspaces, pk=self.kwargs['pk'])
+        return workspace.workspacemember_set.filter(deleted_at__isnull=True)
+
+    def perform_create(self, serializer):
+        workspace = generics.get_object_or_404(self.request.user.active_organization.workspaces, pk=self.kwargs['pk'])
+        # ensure user exists
+        user_pk = self.request.data.get('user') or self.request.data.get('user_id')
+        user = get_object_or_404(User, pk=user_pk)
+        serializer.save(user=user, workspace=workspace)
+
+
+class WorkspaceMemberDetailAPI(generics.RetrieveDestroyAPIView):
+    parser_classes = (JSONParser,)
+    permission_required = ViewClassPermission(
+        GET=all_permissions.organizations_view,
+        DELETE=all_permissions.organizations_change,
+    )
+    serializer_class = __import__('organizations.serializers', fromlist=['WorkspaceMemberSerializer']).WorkspaceMemberSerializer
+
+    def get_queryset(self):
+        workspace = generics.get_object_or_404(self.request.user.active_organization.workspaces, pk=self.kwargs['pk'])
+        return workspace.workspacemember_set.all()
+
+    def delete(self, request, pk=None, member_pk=None):
+        workspace = generics.get_object_or_404(self.request.user.active_organization.workspaces, pk=pk)
+        member = get_object_or_404(workspace.workspacemember_set, pk=member_pk)
+        # soft-delete
+        member.deleted_at = timezone.now()
+        member.save(update_fields=['deleted_at'])
+        return Response(status=204)
+
+
+class WorkspaceProjectsAPI(APIView):
+    """Assign/unassign projects to a workspace."""
+    permission_required = ViewClassPermission(
+        POST=all_permissions.organizations_change,
+        DELETE=all_permissions.organizations_change,
+    )
+
+    def post(self, request, pk):
+        # assign projects to workspace
+        workspace = generics.get_object_or_404(self.request.user.active_organization.workspaces, pk=pk)
+        project_ids = request.data.get('project_ids', [])
+        updated = []
+        for pid in project_ids:
+            try:
+                p = Project.objects.get(pk=pid, organization=self.request.user.active_organization)
+            except Project.DoesNotExist:
+                continue
+            p.workspace = workspace
+            p.save(update_fields=['workspace'])
+            updated.append(p.id)
+        return Response({'updated': updated}, status=200)
+
+    def delete(self, request, pk):
+        # unassign projects from workspace
+        workspace = generics.get_object_or_404(self.request.user.active_organization.workspaces, pk=pk)
+        project_ids = request.data.get('project_ids', [])
+        updated = []
+        for pid in project_ids:
+            try:
+                p = Project.objects.get(pk=pid, workspace=workspace, organization=self.request.user.active_organization)
+            except Project.DoesNotExist:
+                continue
+            p.workspace = None
+            p.save(update_fields=['workspace'])
+            updated.append(p.id)
+        return Response({'updated': updated}, status=200)

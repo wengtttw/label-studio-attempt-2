@@ -13,6 +13,19 @@ export const API_CONFIG = {
     // Organization
     memberships: "/organizations/:pk/memberships",
     userMemberships: "/organizations/:pk/memberships/:userPk",
+    // Workspaces
+  workspaces: "/workspaces",
+  createWorkspace: "POST:/workspaces",
+  workspace: "/workspaces/:pk",
+  updateWorkspace: "PATCH:/workspaces/:pk",
+  deleteWorkspace: "DELETE:/workspaces/:pk",
+  // Workspace members
+  workspaceMembers: "GET:/workspaces/:pk/members",
+  addWorkspaceMember: "POST:/workspaces/:pk/members",
+  removeWorkspaceMember: "DELETE:/workspaces/:pk/members/:member_pk",
+  // Workspace projects
+  workspaceProjects: "POST:/workspaces/:pk/projects",
+  workspaceUnassignProjects: "DELETE:/workspaces/:pk/projects",
     updateUserRole: "POST:/organizations/update-user-role",
     inviteLink: "/invite",
     resetInviteLink: "POST:/invite/reset-token",

@@ -80,3 +80,16 @@ class OrganizationMemberSerializer(DynamicFieldsMixin, serializers.ModelSerializ
 class OrganizationInviteSerializer(serializers.Serializer):
     token = serializers.CharField(required=False)
     invite_url = serializers.CharField(required=False)
+
+
+# Workspace serializers
+class WorkspaceSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    class Meta:
+        model = __import__('organizations.models', fromlist=['Workspace']).Workspace
+        fields = ['id', 'title', 'organization', 'created_at', 'updated_at']
+
+
+class WorkspaceMemberSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    class Meta:
+        model = __import__('organizations.models', fromlist=['WorkspaceMember']).WorkspaceMember
+        fields = ['user', 'workspace', 'created_at', 'updated_at']

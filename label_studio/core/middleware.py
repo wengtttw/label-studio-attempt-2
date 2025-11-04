@@ -287,5 +287,18 @@ class InactiveUserRedirectMiddleware(MiddlewareMixin):
             org_member = OrganizationMember.objects.filter(user=request.user, deleted_at__isnull=True).first()
 
         if org_member and org_member.role == 'inactive':
+            # Try to find another organization membership where the user has an active role
+            alternative = OrganizationMember.objects.filter(
+                user=request.user, deleted_at__isnull=True, role__in=['owner', 'admin', 'reviewer', 'annotator']
+            ).first()
+            if alternative:
+                # Switch user's active organization to the alternative one and continue
+                try:
+                    request.user.active_organization = alternative.organization
+                    request.user.save(update_fields=['active_organization'])
+                except Exception:
+                    logger.exception('Failed to set alternative active_organization for user %s', request.user.email)
+                return None
+
             logger.info('Redirecting inactive user %s to inactive page', request.user.email)
             return redirect('user_inactive')

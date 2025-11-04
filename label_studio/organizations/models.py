@@ -6,6 +6,7 @@ from core.utils.common import create_hash, load_func
 from django.conf import settings
 from django.db import models, transaction
 from django.db.models import Count, Q
+from django.db.models import Case, When, Value, IntegerField
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
@@ -166,10 +167,27 @@ class Organization(OrganizationMixin, models.Model):
 
     @classmethod
     def find_by_user(cls, user, check_deleted=False):
-        memberships = OrganizationMember.objects.filter(user=user).prefetch_related('organization')
-        if not memberships.exists():
-            raise ValueError(f'No memberships found for user {user}')
-        membership = memberships.first()
+        # Prefer an active (non-deleted) membership with an active role (not 'inactive').
+        # Fallback order:
+        # 1) non-deleted membership with active role (owner/admin/reviewer/annotator)
+        # 2) any non-deleted membership
+        # 3) any membership (including soft-deleted)
+        active_role_members = OrganizationMember.objects.filter(
+            user=user, deleted_at__isnull=True, role__in=['owner', 'admin', 'reviewer', 'annotator']
+        ).prefetch_related('organization')
+        if active_role_members.exists():
+            membership = active_role_members.first()
+        else:
+            non_deleted = OrganizationMember.objects.filter(user=user, deleted_at__isnull=True).prefetch_related('organization')
+            if non_deleted.exists():
+                membership = non_deleted.first()
+            else:
+                # fallback to any membership (keeps legacy behaviour if no non-deleted records found)
+                memberships = OrganizationMember.objects.filter(user=user).prefetch_related('organization')
+                if not memberships.exists():
+                    raise ValueError(f'No memberships found for user {user}')
+                membership = memberships.first()
+
         if check_deleted:
             return (membership.organization, True) if membership.deleted_at else (membership.organization, False)
 
@@ -253,3 +271,126 @@ class Organization(OrganizationMixin, models.Model):
 
     class Meta:
         db_table = 'organization'
+
+
+class Workspace(models.Model):
+    """Workspace / Team which can own projects and have members.
+
+    Simple model mirroring Organization but scoped to projects grouping.
+    """
+
+    title = models.CharField(_('workspace title'), max_length=1000, null=False)
+
+    token = models.CharField(
+        _('token'), max_length=256, default=create_hash, unique=True, null=True, blank=True
+    )
+
+    organization = models.ForeignKey(
+        'organizations.Organization', on_delete=models.SET_NULL, null=True, blank=True, related_name='workspaces'
+    )
+
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='workspaces', through='WorkspaceMember')
+
+    # allow a user to create multiple workspaces (many workspaces -> one user)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_workspaces',
+        verbose_name=_('created_by'),
+    )
+
+    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+
+    contact_info = models.EmailField(_('contact info'), blank=True, null=True)
+
+    def __str__(self):
+        return self.title + ', id=' + str(self.pk)
+
+
+class WorkspaceMember(models.Model):
+    """Membership record for workspaces.
+
+    When a WorkspaceMember becomes active, we create corresponding ProjectMember rows
+    (enabled=False by default) for the projects attached to the workspace. When a
+    WorkspaceMember is deactivated/soft-deleted, the workspace-origin project members
+    are disabled.
+    """
+
+    # No per-workspace roles here: permission/role checks should be resolved via
+    # OrganizationMember semantics. Workspace membership is a simple active/inactive
+    # membership (soft-delete via deleted_at).
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wm_through', help_text='User ID'
+    )
+    workspace = models.ForeignKey('organizations.Workspace', on_delete=models.CASCADE, help_text='Workspace ID')
+
+    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+
+    deleted_at = models.DateTimeField(
+        _('deleted at'),
+        default=None,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text='Timestamp indicating when the workspace member was marked as deleted. If NULL, the member is not considered deleted.',
+    )
+
+    class Meta:
+        ordering = ['pk']
+
+    @property
+    def is_active(self):
+        """WorkspaceMember is active when not soft-deleted. Role checks should be
+        sourced from OrganizationMember when needed elsewhere in the system."""
+        return self.deleted_at is None
+
+
+# Signals: keep workspace membership synced into project membership
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+@receiver(post_save, sender=WorkspaceMember)
+def _sync_workspace_member_to_projects(sender, instance: WorkspaceMember, **kwargs):
+    """Ensure that when a WorkspaceMember is active, the user is present as ProjectMember
+    for projects belonging to the workspace. We create ProjectMember rows only when they
+    don't exist. Created ProjectMember rows are created with enabled=False as requested.
+
+    If the WorkspaceMember is not active (role inactive or soft-deleted), we disable
+    ProjectMember rows that were created for this WorkspaceMember (matching workspace_member FK).
+    """
+    # import here to avoid circular imports
+    try:
+        from projects.models import Project, ProjectMember
+    except Exception:
+        # If projects app is not yet ready during migrations, just skip.
+        return
+
+    active = instance.is_active
+
+    if active:
+        projects = instance.workspace.projects.all()
+        for p in projects:
+            # If user already a ProjectMember for this project, skip (do not create).
+            pm_qs = ProjectMember.objects.filter(user=instance.user, project=p)
+            if pm_qs.exists():
+                # leave existing membership untouched
+                continue
+
+            # create a project member for the user tied to this workspace_member
+            try:
+                ProjectMember.objects.create(
+                    user=instance.user, project=p, enabled=False, workspace_member=instance
+                )
+            except Exception:
+                # swallow errors during migrations or race conditions
+                logger.exception('Failed to create ProjectMember for workspace sync', exc_info=True)
+    else:
+        # deactivate project members that were created by this workspace member
+        try:
+            ProjectMember.objects.filter(workspace_member=instance, enabled=True).update(enabled=False)
+        except Exception:
+            logger.exception('Failed to disable ProjectMembers for workspace sync', exc_info=True)

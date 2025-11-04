@@ -145,6 +145,10 @@ class Project(ProjectMixin, models.Model):
     organization = models.ForeignKey(
         'organizations.Organization', on_delete=models.CASCADE, related_name='projects', null=True
     )
+    # Each project may belong to a single Workspace (nullable for backward compatibility).
+    workspace = models.ForeignKey(
+        'organizations.Workspace', on_delete=models.SET_NULL, related_name='projects', null=True, blank=True
+    )
     label_config = models.TextField(
         _('label config'),
         blank=True,
@@ -1291,6 +1295,11 @@ class ProjectMember(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='project_memberships', help_text='User ID'
     )
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', help_text='Project ID')
+    # If this member row was automatically created due to workspace membership,
+    # this FK points to the WorkspaceMember that caused it. Null for manually invited members.
+    workspace_member = models.ForeignKey(
+        'organizations.WorkspaceMember', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_project_members'
+    )
     enabled = models.BooleanField(default=True, help_text='Project member is enabled')
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)

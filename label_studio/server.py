@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 LS_PATH = str(pathlib.Path(__file__).parent.absolute())
 DEFAULT_USERNAME = 'default_user@localhost'
 
+_allowed_hosts = os.environ.get("ALLOWED_HOSTS", "host.docker.internal,localhost,127.0.0.1")
+ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(",") if h.strip()]
 
 def _setup_env():
     sys.path.insert(0, LS_PATH)

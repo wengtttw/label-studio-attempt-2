@@ -30,6 +30,9 @@ _api_urlpattens = [
 urlpatterns = [
     path('organization/', views.simple_view, name='organization-simple'),
     path('organization/webhooks', views.simple_view, name='organization-simple-webhooks'),
+    # workspace frontend route (SPA) - serve the same simple view so refresh works
+    path('organization/workspaces', views.simple_view, name='organization-workspaces'),
+    path('organization/workspaces/', views.simple_view, name='organization-workspaces-slash'),
     path('people/', include(_urlpatterns)),
     # TODO: temporary route, remove as needed
     path('models/', views.simple_view, name='models'),
@@ -38,4 +41,10 @@ urlpatterns = [
     path('api/invite', api.OrganizationInviteAPI.as_view(), name='organization-invite'),
     path('api/invite/reset-token', api.OrganizationResetTokenAPI.as_view(), name='organization-reset-token'),
     path('api/organizations/update-user-role/', api.UpdateUserRoleAPI.as_view(), name='update-user-role'),
+    # workspaces list for current user
+    path('api/workspaces/', api.WorkspaceCreateAPI.as_view(), name='workspace-list'),
+    path('api/workspaces/<int:pk>/', api.WorkspaceDetailAPI.as_view(), name='workspace-detail'),
+    path('api/workspaces/<int:pk>/members/', api.WorkspaceMemberListAPI.as_view(), name='workspace-members-list'),
+    path('api/workspaces/<int:pk>/members/<int:member_pk>/', api.WorkspaceMemberDetailAPI.as_view(), name='workspace-member-detail'),
+    path('api/workspaces/<int:pk>/projects/', api.WorkspaceProjectsAPI.as_view(), name='workspace-projects'),
 ]
