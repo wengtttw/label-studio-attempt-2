@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 _PARAGRAPH_SAMPLE = None
 
 
-def main(request):
+def main(request, **kwargs):
     user = request.user
 
     if user.is_authenticated:
@@ -236,6 +236,11 @@ def static_file_with_host_resolver(path_on_disk, content_type):
     path_on_disk = os.path.join(settings.STATIC_ROOT, path_on_disk)
 
     def serve_file(request):
+        # Check if file exists before trying to open it
+        if not os.path.exists(path_on_disk):
+            logger.warning(f'Static file not found: {path_on_disk}')
+            return HttpResponseNotFound()
+
         with open(path_on_disk, 'r') as f:
             body = f.read()
             body = body.replace('{{HOSTNAME}}', settings.HOSTNAME)

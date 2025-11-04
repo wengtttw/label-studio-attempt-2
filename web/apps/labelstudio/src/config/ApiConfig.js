@@ -29,6 +29,17 @@ export const API_CONFIG = {
     removeProjectMember: "DELETE:/projects/:pk/members/:userPk",
     updateProjectMember: "PATCH:/projects/:pk/members/:userPk",
 
+    // Workspaces (Workspace RBAC Extension)
+    workspaces: "/workspaces",
+    workspaceDetail: "/workspaces/:pk",
+    createWorkspace: "POST:/workspaces",
+    updateWorkspace: "PATCH:/workspaces/:pk",
+    deleteWorkspace: "DELETE:/workspaces/:pk",
+    workspaceAddMember: "POST:/workspaces/:pk/add-member",
+    workspaceRemoveMember: "POST:/workspaces/:pk/remove-member",
+    workspaceAddProject: "POST:/workspaces/:pk/add-project",
+    workspaceRemoveProject: "POST:/workspaces/:pk/remove-project",
+
     // Presigning
     presignUrlForTask: "/../tasks/:taskID/presign",
     presignUrlForProject: "/../projects/:projectId/presign",

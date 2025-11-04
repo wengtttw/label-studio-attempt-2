@@ -1,0 +1,114 @@
+/**
+ * Styles for Workspace Detail Page
+ */
+
+.workspace-detail {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 16px 24px;
+    background-color: #fafafa;
+    border-radius: 8px;
+    gap: 32px;
+
+    h1 {
+      margin: 0;
+      margin-right: 24px;
+      font-size: 24px;
+      font-weight: 600;
+    }
+  }
+
+  &__description {
+    color: #666;
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+
+  &__tabs {
+    display: flex;
+    gap: 24px;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 24px;
+  }
+
+  &__tab {
+    padding: 12px 0;
+    cursor: pointer;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+
+    &:hover {
+      color: #1890ff;
+    }
+
+    &--active {
+      color: #1890ff;
+      border-bottom-color: #1890ff;
+    }
+  }
+
+  &__projects,
+  &__members {
+    margin-top: 16px;
+  }
+
+  &__section-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+
+  &__project-item,
+  &__member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+
+    &:hover {
+      border-color: #1890ff;
+    }
+  }
+
+  &__project-info,
+  &__member-info {
+    flex: 1;
+  }
+
+  &__project-title,
+  &__member-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  &__project-description,
+  &__member-email {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  &__member-role {
+    font-size: 12px;
+    color: #999;
+    text-transform: capitalize;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+  }
+}

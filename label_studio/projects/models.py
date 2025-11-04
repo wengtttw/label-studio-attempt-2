@@ -1292,6 +1292,7 @@ class ProjectMember(models.Model):
     )
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', help_text='Project ID')
     enabled = models.BooleanField(default=True, help_text='Project member is enabled')
+    deleted_at = models.DateTimeField(null=True, blank=True, default=None, help_text='Soft delete timestamp')
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
 

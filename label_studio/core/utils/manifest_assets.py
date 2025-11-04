@@ -25,5 +25,13 @@ def get_manifest_asset(path: str) -> str:
     {% manifest_asset 'main.js' %}
     """
     if path in _MANIFEST:
-        return f'{settings.FRONTEND_HOSTNAME}{_MANIFEST[path]}'
-    return f'{settings.FRONTEND_HOSTNAME}/react-app/{path}'
+        asset_path = _MANIFEST[path]
+    else:
+        asset_path = f'/react-app/{path}'
+
+    # If FRONTEND_HOSTNAME is set and is a full URL, return full URL
+    # Otherwise return just the path for static file serving
+    if settings.FRONTEND_HOSTNAME and (settings.FRONTEND_HOSTNAME.startswith('http://') or settings.FRONTEND_HOSTNAME.startswith('https://')):
+        return f'{settings.FRONTEND_HOSTNAME}{asset_path}'
+    # Return relative path (strip leading /) for static file serving
+    return asset_path.lstrip('/')

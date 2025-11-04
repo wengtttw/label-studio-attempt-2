@@ -233,6 +233,7 @@ INSTALLED_APPS = [
     'jwt_auth',
     'session_policy',
     'fsm',
+    'label_studio.workplace_RBAC_extension',  # Workspace RBAC Extension
 ]
 
 MIDDLEWARE = [

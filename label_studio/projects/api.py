@@ -198,7 +198,7 @@ class IsProjectOwnerOrMember(permissions.BasePermission):
         if obj.created_by == user:
             return True
         # Allow if member
-        return obj.members.filter(user=user).exists()
+        return obj.members.filter(user=user, enabled=True, deleted_at__isnull=True).exists()
 
 @method_decorator(
     name='get',
@@ -283,9 +283,19 @@ class ProjectListAPI(generics.ListCreateAPIView):
         # Allow all for owner role
         if hasattr(user, 'role') and user.role == 'owner':
             return Project.objects.with_counts()
-        # Only show projects where user is creator or member, but annotate with counts
+
+        # Direct project access (existing)
+        direct_access = models.Q(created_by=user) | models.Q(members__user=user, members__enabled=True, members__deleted_at__isnull=True)
+
+        # Workspace access (new) - user is member of workspace containing project
+        workspace_access = models.Q(
+            workspace_memberships__workspace__members__user=user,
+            workspace_memberships__workspace__members__enabled=True,
+            workspace_memberships__workspace__deleted_at__isnull=True
+        )
+
         return Project.objects.with_counts().filter(
-            models.Q(created_by=user) | models.Q(members__user=user)
+            direct_access | workspace_access
         ).distinct()
 
     def get_serializer_context(self):
@@ -307,10 +317,10 @@ class ProjectListAPI(generics.ListCreateAPIView):
             project = ser.save(organization=org)
             # Add the creator as an enabled ProjectMember
             from projects.models import ProjectMember
-            ProjectMember.objects.get_or_create(
+            ProjectMember.objects.update_or_create(
                 user=user,
                 project=project,
-                defaults={"enabled": True},
+                defaults={"enabled": True, "deleted_at": None},
             )
         except IntegrityError as e:
             if str(e) == 'UNIQUE constraint failed: project.title, project.created_by_id':
@@ -349,10 +359,30 @@ class ProjectCountsListAPI(generics.ListAPIView):
     pagination_class = ProjectListPagination
 
     def get_queryset(self):
+        user = self.request.user
         serializer = GetFieldsSerializer(data=self.request.query_params)
         serializer.is_valid(raise_exception=True)
         fields = serializer.validated_data.get('include')
-        return Project.objects.with_counts(fields=fields).filter(organization=self.request.user.active_organization)
+
+        # Allow all for owner role
+        if hasattr(user, 'role') and user.role == 'owner':
+            return Project.objects.with_counts(fields=fields).filter(organization=user.active_organization)
+
+        # Direct project access
+        direct_access = models.Q(created_by=user) | models.Q(members__user=user, members__enabled=True, members__deleted_at__isnull=True)
+
+        # Workspace access - user is member of workspace containing project
+        workspace_access = models.Q(
+            workspace_memberships__workspace__members__user=user,
+            workspace_memberships__workspace__members__enabled=True,
+            workspace_memberships__workspace__deleted_at__isnull=True
+        )
+
+        return Project.objects.with_counts(fields=fields).filter(
+            organization=user.active_organization
+        ).filter(
+            direct_access | workspace_access
+        ).distinct()
 
 
 @method_decorator(
@@ -471,9 +501,17 @@ class ProjectAPI(generics.RetrieveUpdateDestroyAPIView):
         if obj.created_by == user:
             return obj
         # Allow if member and enabled
-        if obj.members.filter(user=user).exists():
+        if obj.members.filter(user=user, enabled=True, deleted_at__isnull=True).exists():
             if hasattr(obj, 'has_collaborator_enabled') and not obj.has_collaborator_enabled(user):
                 raise PermissionDenied("Your project access is disabled. Please contact your project manager for enabling your status.")
+            return obj
+        # Allow if user is member of workspace containing this project
+        workspace_member_exists = obj.workspace_memberships.filter(
+            workspace__members__user=user,
+            workspace__members__enabled=True,
+            workspace__deleted_at__isnull=True
+        ).exists()
+        if workspace_member_exists:
             return obj
         raise PermissionDenied("You do not have access to this project.")
     parser_classes = (JSONParser, FormParser, MultiPartParser)
@@ -491,10 +529,30 @@ class ProjectAPI(generics.RetrieveUpdateDestroyAPIView):
     redirect_kwarg = 'pk'
 
     def get_queryset(self):
+        user = self.request.user
         serializer = GetFieldsSerializer(data=self.request.query_params)
         serializer.is_valid(raise_exception=True)
         fields = serializer.validated_data.get('include')
-        return Project.objects.with_counts(fields=fields).filter(organization=self.request.user.active_organization)
+
+        # Allow all for owner role
+        if hasattr(user, 'role') and user.role == 'owner':
+            return Project.objects.with_counts(fields=fields).filter(organization=user.active_organization)
+
+        # Direct project access
+        direct_access = models.Q(created_by=user) | models.Q(members__user=user, members__enabled=True, members__deleted_at__isnull=True)
+
+        # Workspace access - user is member of workspace containing project
+        workspace_access = models.Q(
+            workspace_memberships__workspace__members__user=user,
+            workspace_memberships__workspace__members__enabled=True,
+            workspace_memberships__workspace__deleted_at__isnull=True
+        )
+
+        return Project.objects.with_counts(fields=fields).filter(
+            organization=user.active_organization
+        ).filter(
+            direct_access | workspace_access
+        ).distinct()
 
     def get(self, request, *args, **kwargs):
         return super(ProjectAPI, self).get(request, *args, **kwargs)
@@ -996,7 +1054,7 @@ class IsProjectAdminOrReadOnly(permissions.BasePermission):
 
         # Check if user is an enabled project member
         is_project_member = ProjectMember.objects.filter(
-            project=project, user=user, enabled=True
+            project=project, user=user, enabled=True, deleted_at__isnull=True
         ).exists()
 
         # Check if user is an active org member with owner/admin role
@@ -1030,7 +1088,7 @@ class ProjectMemberViewSet(viewsets.ModelViewSet):
         project_id = self.kwargs.get('project_pk') or self.request.query_params.get('project')
         if not project_id:
             return ProjectMember.objects.none()
-        return ProjectMember.objects.filter(project_id=project_id)
+        return ProjectMember.objects.filter(project_id=project_id, deleted_at__isnull=True)
 
     def perform_create(self, serializer):
         project_id = self.kwargs.get('project_pk') or self.request.data.get('project')
@@ -1040,7 +1098,7 @@ class ProjectMemberViewSet(viewsets.ModelViewSet):
         User = get_user_model()
         user = get_object_or_404(User, pk=user_id)
         acting_user = self.request.user
-        is_project_member = ProjectMember.objects.filter(project=project, user=acting_user, enabled=True).exists()
+        is_project_member = ProjectMember.objects.filter(project=project, user=acting_user, enabled=True, deleted_at__isnull=True).exists()
         try:
             org_member = OrganizationMember.objects.get(user=acting_user, organization=project.organization, deleted_at__isnull=True)
             is_org_admin = org_member.role in ['owner', 'admin']
@@ -1050,7 +1108,7 @@ class ProjectMemberViewSet(viewsets.ModelViewSet):
             print("DEBUG: perform_create permission denied for user", acting_user)
             raise PermissionDenied('Only enabled project collaborators with owner/admin org role can add members.')
 
-        serializer.save(project=project, user=user, enabled=False)
+        serializer.save(project=project, user=user, enabled=True)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

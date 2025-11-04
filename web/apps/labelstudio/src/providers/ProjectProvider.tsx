@@ -97,6 +97,12 @@ export const ProjectProvider: React.FunctionComponent = ({ children }) => {
   );
 
   useEffect(() => {
+    const isProjectRoute = window.location.pathname.startsWith('/projects');
+
+    if (!isProjectRoute) {
+      return;
+    }
+
     if (+params.id !== projectData?.id) {
       setProjectData({});
     }

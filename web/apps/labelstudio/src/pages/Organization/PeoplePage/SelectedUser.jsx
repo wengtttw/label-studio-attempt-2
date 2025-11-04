@@ -30,7 +30,7 @@ const UserProjectsLinks = ({ projects }) => {
 const ROLE_OPTIONS = [
   { value: "admin", label: "Administrator" },
   { value: "annotator", label: "Annotator" },
-  { value: "reviewer", label: "Reviewer" },
+  // { value: "reviewer", label: "Reviewer" },  // Commented out - reviewer functionality removed
   { value: "inactive", label: "Inactive" },
 ];
 
