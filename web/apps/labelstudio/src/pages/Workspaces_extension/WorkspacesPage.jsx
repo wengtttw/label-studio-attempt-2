@@ -31,6 +31,8 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "@humansignal/ui";
 import { ApiContext } from "../../providers/ApiProvider";
+import { useCurrentUser } from "../../providers/CurrentUser";
+import { ToastType, useToast } from "@humansignal/ui";
 import { Block, Elem } from "../../utils/bem";
 import { Spinner } from "../../components/Spinner/Spinner";
 import { WorkspacesList } from "./WorkspacesList";
@@ -44,6 +46,10 @@ export const WorkspacesPage = () => {
   const [workspaces, setWorkspaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const { user: currentUser } = useCurrentUser();
+  const toast = useToast();
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canManageWorkspaces = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   /**
    * Loads all workspaces from the API and updates component state.
@@ -80,11 +86,25 @@ export const WorkspacesPage = () => {
     await fetchWorkspaces();
   }, [fetchWorkspaces]);
 
+  const openCreateModal = () => {
+    if (isUserLoaded && !canManageWorkspaces) {
+      toast?.show({
+        type: ToastType.error,
+        title: "Only organization admins and owners can create workspaces.",
+      });
+      return;
+    }
+
+    setShowCreateModal(true);
+  };
+
   return (
     <Block name="workspaces-page">
       <Elem name="header">
         <h1>Workspaces</h1>
-        <Button onClick={() => setShowCreateModal(true)}>Create Workspace</Button>
+        <Button onClick={openCreateModal} disabled={isUserLoaded && !canManageWorkspaces}>
+          Create Workspace
+        </Button>
       </Elem>
 
       <Elem name="content">

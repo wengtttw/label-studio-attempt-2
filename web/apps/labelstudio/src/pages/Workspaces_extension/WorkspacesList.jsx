@@ -26,12 +26,18 @@
 import React, { useContext } from "react";
 import { Button } from "@humansignal/ui";
 import { ApiContext } from "../../providers/ApiProvider";
+import { useCurrentUser } from "../../providers/CurrentUser";
+import { ToastType, useToast } from "@humansignal/ui";
 import { Block, Elem } from "../../utils/bem";
 import { useHistory } from "react-router-dom";
 
 export const WorkspacesList = ({ workspaces, onUpdate }) => {
   const api = useContext(ApiContext);
   const history = useHistory();
+  const { user: currentUser } = useCurrentUser();
+  const toast = useToast();
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canManageWorkspaces = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   /**
    * Deletes a workspace after user confirmation.
@@ -39,6 +45,11 @@ export const WorkspacesList = ({ workspaces, onUpdate }) => {
    * then triggers parent onUpdate to refresh the list.
    */
   const handleDelete = async (workspaceId) => {
+    if (isUserLoaded && !canManageWorkspaces) {
+      toast?.show({ type: ToastType.error, title: "Only organization admins and owners can delete workspaces." });
+      return;
+    }
+
     if (!window.confirm("Are you sure you want to delete this workspace?")) {
       return;
     }
@@ -83,7 +94,7 @@ export const WorkspacesList = ({ workspaces, onUpdate }) => {
             </Elem>
           </Elem>
           <Elem name="actions">
-            <Button size="small" danger onClick={() => handleDelete(workspace.id)}>
+            <Button size="small" danger onClick={() => handleDelete(workspace.id)} disabled={isUserLoaded && !canManageWorkspaces}>
               Delete
             </Button>
           </Elem>
