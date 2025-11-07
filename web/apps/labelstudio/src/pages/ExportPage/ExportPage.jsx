@@ -42,6 +42,7 @@ export const ExportPage = () => {
   const [currentFormat, setCurrentFormat] = useState("JSON");
 
   const { user: currentUser } = useCurrentUser();
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
   const canExport = canManageProject(currentUser);
 
   /** @type {import('react').RefObject<Form>} */
