@@ -13,7 +13,7 @@ services:
       - POSTGRE_USER=postgres
       - POSTGRE_PASSWORD=postgres1
       - POSTGRE_PORT=5432
-      - POSTGRE_HOST=database-1.cpugm02gy8x7.ap-southeast-1.rds.amazonaws.com
+      - POSTGRE_HOST=label-studio-database-1.cpugm02gy8x7.ap-southeast-1.rds.amazonaws.com
       - LABEL_STUDIO_HOST=${LABEL_STUDIO_HOST:-}
       - JSON_LOG=1
     volumes:
