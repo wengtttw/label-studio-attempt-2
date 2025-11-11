@@ -1,3 +1,78 @@
+## Changes 11 November 2025 - Disable Skip Button Functionality
+
+### Overview
+This change disables the skip button in the annotation interface to ensure all annotations are completed rather than skipped.
+
+---
+
+### 1. Skip Button Disabled (Frontend)
+
+**Objective**: Remove the ability for annotators to skip tasks in the annotation interface.
+
+**User Request**: "Able to skip annotation - can we disable this function instead? Ideally all annotations should be annotated and not be skipped"
+
+**Files Modified**:
+- `web/libs/editor/src/components/BottomBar/Controls.tsx` (Lines 181-201)
+
+**Logic/Reasoning**:
+- Skip functionality allows annotators to bypass tasks they cannot complete
+- Client requirement: All tasks must be annotated, not skipped
+- Solution: Comment out skip button and unskip button in the UI
+
+**Code Changes**:
+```typescript
+// Lines 181-190: Commented out "Was skipped" indicator and Unskip button
+} else if (annotation.skipped) {
+  // CUSTOM MODIFICATION: Skip button disabled - commented out unskip functionality
+  /*
+  buttons.push(
+    <Elem name="skipped-info" key="skipped">
+      <IconBan /> Was skipped
+    </Elem>,
+  );
+  buttons.push(<UnskipButton key="unskip" disabled={disabled} store={store} />);
+  */
+} else {
+  // CUSTOM MODIFICATION: Skip button disabled - commented out skip button
+  /*
+  if (store.hasInterface("skip")) {
+    const onSkipWithComment = (e: React.MouseEvent, action: () => any) => {
+      handleActionWithComments(e, action, "Please enter a comment before skipping");
+    };
+
+    buttons.push(<SkipButton key="skip" disabled={disabled} store={store} onSkipWithComment={onSkipWithComment} />);
+  }
+  */
+```
+
+**What Was Disabled**:
+1. **Skip Button**: Button that allows annotators to skip tasks (Ctrl+Space keyboard shortcut)
+2. **Unskip Button**: Button that allows reversing a skip action
+3. **"Was skipped" Badge**: Visual indicator showing a task was previously skipped
+
+**Impact**:
+- ✅ Skip button removed from annotation interface
+- ✅ Annotators cannot skip tasks via UI button
+- ⚠️ Users can still skip via:
+  - Keyboard shortcut (Ctrl+Space) - still active
+  - Direct API calls to `/api/tasks/{id}/annotations/` with `was_cancelled=true`
+
+**To Completely Block Skipping**:
+If you need to completely prevent skipping (including API and keyboard shortcuts), you should also:
+1. Set `show_skip_button=False` in project settings (backend)
+2. Or modify backend API to reject skip requests
+
+**Rebuild Required**:
+```bash
+cd web
+npm run build
+```
+
+**To Re-enable Skip Button**:
+Remove the `/*` and `*/` comment markers from lines 182-201 in `Controls.tsx`
+
+---
+
 ## Changes 28 October 2025 by Chris
 
 ### 1. Add Database Indexes for Role Lookups

@@ -179,13 +179,18 @@ export const Controls = controlsInjector<{ annotation: MSTAnnotation }>(
       });
       buttons.push(<AcceptButton key="review-accept" disabled={disabled} history={history} store={store} />);
     } else if (annotation.skipped) {
+      // CUSTOM MODIFICATION: Skip button disabled - commented out unskip functionality
+      /*
       buttons.push(
         <Elem name="skipped-info" key="skipped">
           <IconBan /> Was skipped
         </Elem>,
       );
       buttons.push(<UnskipButton key="unskip" disabled={disabled} store={store} />);
+      */
     } else {
+      // CUSTOM MODIFICATION: Skip button disabled - commented out skip button
+      /*
       if (store.hasInterface("skip")) {
         const onSkipWithComment = (e: React.MouseEvent, action: () => any) => {
           handleActionWithComments(e, action, "Please enter a comment before skipping");
@@ -193,6 +198,7 @@ export const Controls = controlsInjector<{ annotation: MSTAnnotation }>(
 
         buttons.push(<SkipButton key="skip" disabled={disabled} store={store} onSkipWithComment={onSkipWithComment} />);
       }
+      */
 
       const isDisabled = disabled || submitDisabled;
 
