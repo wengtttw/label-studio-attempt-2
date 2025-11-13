@@ -33,6 +33,8 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import { Button } from "@humansignal/ui";
 import { ApiContext } from "../../providers/ApiProvider";
+import { useCurrentUser } from "../../providers/CurrentUser";
+import { ToastType, useToast } from "@humansignal/ui";
 import { Block, Elem } from "../../utils/bem";
 import { Spinner } from "../../components/Spinner/Spinner";
 import { AddMemberModal } from "./AddMemberModal";
@@ -51,6 +53,11 @@ export const WorkspaceDetail = () => {
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState(null);
+  const { user: currentUser } = useCurrentUser();
+  const toast = useToast();
+
+  const isUserLoaded = currentUser && typeof currentUser.org_role === "string";
+  const canManageWorkspace = isUserLoaded && ["admin", "owner"].includes(currentUser.org_role);
 
   const fetchWorkspace = useCallback(async () => {
     setLoading(true);
@@ -77,6 +84,10 @@ export const WorkspaceDetail = () => {
   }, [fetchWorkspace]);
 
   const handleRemoveProject = async (projectId) => {
+    if (isUserLoaded && !canManageWorkspace) {
+      toast?.show({ type: ToastType.error, title: "Only organization admins and owners can remove projects from a workspace." });
+      return;
+    }
     if (!window.confirm("Remove this project from workspace?")) {
       return;
     }
@@ -93,6 +104,11 @@ export const WorkspaceDetail = () => {
   };
 
   const handleRemoveMember = (member) => {
+    if (isUserLoaded && !canManageWorkspace) {
+      toast?.show({ type: ToastType.error, title: "Only organization admins and owners can remove members from a workspace." });
+      return;
+    }
+
     setMemberToRemove(member);
   };
 
@@ -135,7 +151,13 @@ export const WorkspaceDetail = () => {
       {activeTab === "projects" && (
         <Elem name="projects">
           <Elem name="section-header">
-            <Button onClick={() => setShowAddProjectModal(true)}>Add Project</Button>
+            <Button
+              size="small"
+              disabled={isUserLoaded && !canManageWorkspace}
+              onClick={() => setShowAddProjectModal(true)}
+            >
+              Add Project
+            </Button>
           </Elem>
           {workspace.projects && workspace.projects.length > 0 ? (
             workspace.projects.map((project) => (
@@ -144,7 +166,12 @@ export const WorkspaceDetail = () => {
                   <Elem name="project-title">{project.title}</Elem>
                   <Elem name="project-description">{project.description}</Elem>
                 </Elem>
-                <Button size="small" danger onClick={() => handleRemoveProject(project.id)}>
+                <Button
+                  size="small"
+                  danger
+                  disabled={isUserLoaded && !canManageWorkspace}
+                  onClick={() => handleRemoveProject(project.id)}
+                >
                   Remove
                 </Button>
               </Elem>
@@ -158,7 +185,13 @@ export const WorkspaceDetail = () => {
       {activeTab === "members" && (
         <Elem name="members">
           <Elem name="section-header">
-            <Button onClick={() => setShowAddMemberModal(true)}>Add Member</Button>
+            <Button
+              size="small"
+              disabled={isUserLoaded && !canManageWorkspace}
+              onClick={() => setShowAddMemberModal(true)}
+            >
+              Add Member
+            </Button>
           </Elem>
           {workspace.members && workspace.members.length > 0 ? (
             workspace.members.map((member) => (
@@ -170,7 +203,12 @@ export const WorkspaceDetail = () => {
                   <Elem name="member-email">{member.user.email}</Elem>
                   <Elem name="member-role">{member.effective_role}</Elem>
                 </Elem>
-                <Button size="small" danger onClick={() => handleRemoveMember(member)}>
+                <Button
+                  size="small"
+                  danger
+                  disabled={isUserLoaded && !canManageWorkspace}
+                  onClick={() => handleRemoveMember(member)}
+                >
                   Remove
                 </Button>
               </Elem>
