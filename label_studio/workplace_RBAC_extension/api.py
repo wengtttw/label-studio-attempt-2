@@ -157,11 +157,16 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         creates ProjectMember records for every project currently in the workspace. This
         ensures workspace members immediately have access to all workspace projects.
 
+        If role_override is provided, also updates the user's organization role
+        to match. This makes the role change effective organization-wide, not just in the workspace.
+
+        Only organization owners can modify or promote to owner role.
+
         Request Format:
             POST /api/workspaces/{pk}/add-member/
             {
                 "user_id": <int>,
-                "role_override": <string, optional>
+                "role_override": <string, optional>  # If provided, updates org role too
             }
 
         Response Format:
@@ -216,6 +221,33 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
                 {'error': 'User is not a member of this organization'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        # Update organization role if role_override is provided
+        if role_override and role_override in ['owner', 'admin', 'reviewer', 'annotator']:
+
+            # Get requester's org membership to check permissions
+            requester_member = OrganizationMember.objects.get(
+                user=request.user,
+                organization=workspace.organization,
+                deleted_at__isnull=True
+            )
+
+            # Only owners can modify other owners
+            if org_member.is_owner and requester_member.role != 'owner':
+                return Response(
+                    {'error': 'Only organization owners can change another owner\'s role'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Only owners can promote others to owner
+            if role_override == 'owner' and requester_member.role != 'owner':
+                return Response(
+                    {'error': 'Only organization owners can promote users to owner role'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            org_member.role = role_override
+            org_member.save()
 
         member, created = WorkspaceMember.objects.update_or_create(
             user_id=user_id,

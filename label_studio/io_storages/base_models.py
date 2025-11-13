@@ -914,11 +914,13 @@ class ExportStorageLink(models.Model):
             user = annotation.project.organization.created_by
         flag = flag_set('fflag_feat_optic_650_target_storage_task_format_long', user=user)
 
+        # FIX: Always include .json extension for all export files
         if settings.FUTURE_SAVE_TASK_TO_STORAGE or flag:
-            ext = '.json' if settings.FUTURE_SAVE_TASK_TO_STORAGE_JSON_EXT or flag else ''
-            return str(annotation.task.id) + ext
+            # Task-based naming with .json extension
+            return str(annotation.task.id) + '.json'
         else:
-            return str(annotation.id)
+            # Annotation-based naming with .json extension
+            return str(annotation.id) + '.json'
 
     @property
     def key(self):
