@@ -13,134 +13,135 @@ details: |
 config: |
   <View>
   <style>
-    .lsf-richtext__line {
-      padding-left: 0px;
-    }
-    .ant-form-item{
-      margin: 0 0 4px
-    }
-    .section-box {
-      border: 1px solid #ddd; 
-      border-radius: 12px; 
-      padding: 12px; 
-      margin: 50px 0; 
-      background-color: #f5f7fa;
-    }
+  .lsf-richtext__line {
+  padding-left: 0px;
+  }
+  .ant-form-item{
+  margin: 0 0 4px
+  }
+  .section-box {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 50px 0;
+  background-color: #f5f7fa;
+  }
   </style>
 
-  <!-- Image + Context -->
+  <!-- Image -->
   <Image name="image" value="$image_url" width="100%" height="300px"/>
+
+  <!-- Context Section -->
   <View className="section-box" style="margin: 25px 0">
-    <Header value="💡Context:" size="3"/>
-    <Text name="context_display" value="$context"
-        style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
-              margin: 5px 0; background-color: #f9f9f9;"/>
+  <Header value="📖 Context:" size="3"/>
+  <Text name="context_display" value="$context"
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px;
+  margin: 5px 0; background-color: #f9f9f9;"/>
   </View>
-    
-  <!-- Question 1 -->
+
+  <!-- Main Question -->
   <View className="section-box" style="margin: 25px 0">
   <Header value="❓Question 1:" size="3"/>
   <Text name="question_display" value="$question_and_answers.question_0"
-        style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
-              margin: 5px 0; background-color: #f9f9f9;"/>
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px;
+  margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="🖼️ Old Caption to be assessed:" size="4"/>
   <Text name="old_caption" value="$question_and_answers.answer_0"
-        style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
-              margin: 5px 0; background-color: #f9f9f9;"/>
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px;
+  margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="✍️ New Caption:" size="4"/>
   <TextArea name="new_caption_0" toName="image"
-            placeholder="Type in new caption here"
-            rows="10" maxSubmissions="1" required="true"
-            style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
+  placeholder="Type in new caption here"
+  rows="10" maxSubmissions="1" required="true"
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
   <Header value="🪧 Reference if any:" size="6"/>
   <TextArea name="reference_0" toName="image"
-            placeholder="Type in reference to your caption here if any"
-            rows="2" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
+  placeholder="Type in reference to your caption here if any"
+  rows="2" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
 
   <!-- Confidence Score -->
   <Header value="🌟 Confidence Score" size="3" style="margin-top: 20px;"/>
-  <Rating name="confidence_0" toName="image" maxRating="5" icon="star" size="medium" 
-          defaultValue="3" required="true"/>
+  <Rating name="confidence_0" toName="image" maxRating="5" icon="star" size="medium"
+  defaultValue="3" required="true"/>
 
   </View>
 
-  <!-- Question 2 -->
+  <!-- Follow-Up 1 -->
   <View className="section-box">
-  <Header value="❓Question 2" size="3"/>
+  <Header value="❓Follow-Up Question 1" size="3"/>
   <Text name="followup_q1" value="$question_and_answers.question_1"
-        style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
-              margin: 5px 0; background-color: #f9f9f9;"/>
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px;
+  margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="🖼️ Old Caption to be assessed:"/>
   <Text name="followup_old_caption1" value="$question_and_answers.answer_1"
-        style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
-              margin: 5px 0; background-color: #f9f9f9;"/>
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px;
+  margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="✍️ New Caption:" size="4"/>
   <TextArea name="new_caption_1" toName="image"
-            placeholder="Type in new follow up caption 1 here"
-            rows="5" maxSubmissions="1" required="true"
-            style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0 15px 0;"/>
+  placeholder="Type in new follow up caption 1 here"
+  rows="5" maxSubmissions="1" required="true"
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0 15px 0;"/>
   <Header value="🪧 Reference if any:" size="6"/>
   <TextArea name="reference_1" toName="image"
-            placeholder="Type in reference to your caption here if any"
-            rows="2" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
+  placeholder="Type in reference to your caption here if any"
+  rows="2" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
 
   <!-- Confidence Score -->
   <Header value="🌟 Confidence Score" size="3" style="margin-top: 20px;"/>
-  <Rating name="confidence_1" toName="image" maxRating="5" icon="star" size="medium" 
-          defaultValue="3" required="true"/>
+  <Rating name="confidence_1" toName="image" maxRating="5" icon="star" size="medium"
+  defaultValue="3" required="true"/>
   </View>
-    
-  <!-- Question 3 -->
+
+  <!-- Follow-Up 2 -->
   <View className="section-box">
-  <Header value="❓Question 3" size="3"/>
+  <Header value="❓Follow-Up Question 2" size="3"/>
   <Text name="followup_q2" value="$question_and_answers.question_2"
-        style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
-              margin: 5px 0; background-color: #f9f9f9;"/>
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px;
+  margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="🖼️ Old Caption to be assessed:"/>
   <Text name="followup_old_caption2" value="$question_and_answers.answer_2"
-        style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
-              margin: 5px 0; background-color: #f9f9f9;"/>
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px;
+  margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="✍️ New Caption:" size="3"/>
-  <TextArea name="new_caption_2" toName="image" 
-            placeholder="Type in new follow up caption 2 here"
-            rows="5" maxSubmissions="1" required="true"
-            style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0 15px 0;"/>
+  <TextArea name="new_caption_2" toName="image"
+  placeholder="Type in new follow up caption 2 here"
+  rows="5" maxSubmissions="1" required="true"
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0 15px 0;"/>
   <Header value="🪧 Reference if any:" size="6"/>
   <TextArea name="reference_2" toName="image"
-            placeholder="Type in reference to your caption here if any"
-            rows="2" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
+  placeholder="Type in reference to your caption here if any"
+  rows="2" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
 
   <!-- Confidence Score -->
   <Header value="🌟 Confidence Score" size="3" style="margin-top: 20px;"/>
-  <Rating name="confidence_2" toName="image" maxRating="5" icon="star" size="medium" 
-          defaultValue="3" required="true"/>
+  <Rating name="confidence_2" toName="image" maxRating="5" icon="star" size="medium"
+  defaultValue="3" required="true"/>
   </View>
 
-
-  <!-- Question 4 -->
+  <!-- Follow-Up 3 -->
   <View className="section-box">
-  <Header value="❓Question 4" size="3"/>
+  <Header value="❓Follow-Up Question 3" size="3"/>
   <Text name="followup_q3" value="$question_and_answers.question_3"
-        style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
-              margin: 5px 0; background-color: #f9f9f9;"/>
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px;
+  margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="🖼️ Old Caption to be assessed:"/>
   <Text name="followup_old_caption3" value="$question_and_answers.answer_3"
-        style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; 
-              margin: 5px 0; background-color: #f9f9f9;"/>
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px;
+  margin: 5px 0; background-color: #f9f9f9;"/>
   <Header value="✍️ New Caption:" size="3"/>
   <TextArea name="new_caption_3" toName="image"
-            placeholder="Type in new follow up caption 3 here"
-            rows="5" maxSubmissions="1" required="true"
-            style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0 15px 0;"/>
+  placeholder="Type in new follow up caption 3 here"
+  rows="5" maxSubmissions="1" required="true"
+  style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0 15px 0;"/>
   <Header value="🪧 Reference if any:" size="6"/>
   <TextArea name="reference_3" toName="image"
-            placeholder="Type in reference to your caption here if any"
-            rows="2" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
+  placeholder="Type in reference to your caption here if any"
+  rows="2" maxSubmissions="1" style="border: 2px solid #000; border-radius: 25px; padding: 10px 15px; margin: 5px 0;"/>
 
   <!-- Confidence Score -->
   <Header value="🌟 Confidence Score" size="3" style="margin-top: 20px;"/>
-  <Rating name="confidence_3" toName="image" maxRating="5" icon="star" size="medium" 
-          defaultValue="3" required="true"/>
+  <Rating name="confidence_3" toName="image" maxRating="5" icon="star" size="medium"
+  defaultValue="3" required="true"/>
   </View>
 
   </View>
