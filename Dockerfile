@@ -44,6 +44,10 @@ RUN --mount=type=cache,target=/root/web/.yarn,id=yarn-cache,sharing=locked \
     --mount=type=cache,target=/root/web/.nx,id=nx-cache,sharing=locked \
     yarn run build
 
+# Copy liveContent.json to dist folder for runtime access
+RUN cp apps/labelstudio/src/components/HeidiTips/liveContent.json \
+       dist/apps/labelstudio/liveContent.json
+
 ################################ Stage: frontend-version-generator
 FROM frontend-builder AS frontend-version-generator
 RUN --mount=type=cache,target=/root/web/.yarn,id=yarn-cache,sharing=locked \

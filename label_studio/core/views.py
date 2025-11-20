@@ -166,30 +166,21 @@ def samples_paragraphs(request):
 
 
 def heidi_tips(request):
-    """Fetch live tips from github raw liveContent.json to avoid caching and client side CORS issues"""
-    url = 'https://raw.githubusercontent.com/HumanSignal/label-studio/refs/heads/develop/web/apps/labelstudio/src/components/HeidiTips/liveContent.json'
+    """Serve local liveContent.json file from filesystem"""
+    # Path to local liveContent.json in production
+    file_path = Path(__file__).parent.parent.parent / 'web' / 'dist' / 'apps' / 'labelstudio' / 'liveContent.json'
 
-    response = None
     try:
-        response = requests.get(
-            url,
-            headers={'Cache-Control': 'no-cache', 'Content-Type': 'application/json', 'Accept': 'application/json'},
-            timeout=5,
-        )
-        # Raise an exception for bad status codes to avoid caching
-        response.raise_for_status()
-    # Catch all exceptions and return either the status code if there was a response, or default to 404 if there are network issues
-    # This is done this way to catch thrown exceptions from the request itself which will occur for air-gapped environments
-    except Exception:
-        # Any other HTTP error will return the error code, and other errors like connection/timeout errors will be a 404
-        content = {}
-        status_code = 404
-        if response is not None:
-            content['detail'] = response.reason
-            status_code = response.status_code
-        return HttpResponse(json.dumps(content), content_type='application/json', status=status_code)
-
-    return HttpResponse(response.content, content_type='application/json')
+        if file_path.exists():
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return JsonResponse(data, safe=False)
+        else:
+            # File not found - return 404 to trigger fallback
+            return JsonResponse({'error': 'Tips not available'}, status=404)
+    except Exception as e:
+        # On any error, return 404 to trigger client-side fallback
+        return JsonResponse({'error': str(e)}, status=404)
 
 
 @extend_schema(exclude=True)
